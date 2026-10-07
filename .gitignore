@@ -1,10 +1,8 @@
-.venv/
-.env
-node_modules/
-~$*
-__pycache__/
-*.pyc
 .DS_Store
-.pytest_cache/
-*.fab
+node_modules/
+.env
+~$*
+# build output of npm run artifact
 dist/
+# Local-only: editor/preview config
+.claude/

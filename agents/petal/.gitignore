@@ -1,4 +1,0 @@
-.venv/
-*.fab
-__pycache__/
-!README.md

@@ -1,0 +1,1468 @@
+/* Level 4: a farm. Own farm = weather and resource strips, the hero flower beside the field
+   map, field tiles, the farms strip, and the plan, conversation and notices in the panel.
+   Neighbour farm = tiles, a two-panel history chart and its latest reports. Every class
+   starts farm-.
+
+   Field colours (petals, map fields, moisture bars) say where the soil stands against the
+   crop's stress line: rust below it, amber within 10 points, teal-green comfortable. The
+   three were checked for colour-blind separation in both themes; harvested and cover-crop
+   fields also carry a texture (stubble rows, seedling dots) so they never rely on colour. */
+:root {
+  --farm-stress: #bb4b2b;
+  --farm-near: #e0a526;
+  --farm-ok: #2a9a80;
+  --farm-straw: #d9d1b4;
+  --farm-cover: #aad7cc;
+  /* text drawn on those fills */
+  --farm-on-stress: #ffffff;
+  --farm-on-near: #1c1708;
+  --farm-on-ok: #06161a;
+  --farm-on-straw: #2b2614;
+  --farm-on-cover: #0d2620;
+  /* marks: grain, water, the flower's stem, the farmyard */
+  --farm-grain: #c9940a;
+  --farm-water: #2f7fd0;
+  --farm-stem: #4f7a2a;
+  --farm-yard: #8a5a1c;
+  --farm-field-bg: color-mix(in srgb, var(--map-land) 45%, var(--surface));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --farm-stress: #cc5a36;
+    --farm-near: #c99a26;
+    --farm-ok: #2b9f86;
+    --farm-straw: #8c8670;
+    --farm-cover: #1f5a50;
+    --farm-on-stress: #ffffff;
+    --farm-on-near: #17140a;
+    --farm-on-ok: #04120e;
+    --farm-on-straw: #12100a;
+    --farm-on-cover: #e3f4ee;
+    --farm-grain: #d9ab33;
+    --farm-water: #5ea3ee;
+    --farm-stem: #6f9f3a;
+    --farm-yard: #c08a4c;
+    --farm-field-bg: color-mix(in srgb, var(--map-land) 55%, var(--surface));
+  }
+}
+:root[data-theme="dark"] {
+  --farm-stress: #cc5a36;
+  --farm-near: #c99a26;
+  --farm-ok: #2b9f86;
+  --farm-straw: #8c8670;
+  --farm-cover: #1f5a50;
+  --farm-on-stress: #ffffff;
+  --farm-on-near: #17140a;
+  --farm-on-ok: #04120e;
+  --farm-on-straw: #12100a;
+  --farm-on-cover: #e3f4ee;
+  --farm-grain: #d9ab33;
+  --farm-water: #5ea3ee;
+  --farm-stem: #6f9f3a;
+  --farm-yard: #c08a4c;
+  --farm-field-bg: color-mix(in srgb, var(--map-land) 55%, var(--surface));
+}
+
+.farm-caption {
+  font-size: var(--step--1);
+}
+.farm-chips .chip {
+  white-space: normal;
+}
+/* "Plan ... is waiting" only matters when the plan sits below the stage (one column) */
+.farm-jump {
+  display: none;
+}
+@media (max-width: 980px) {
+  .farm-jump {
+    display: inline-flex;
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    color: var(--accent);
+  }
+}
+
+/* -- icons ------------------------------------------------------------------------ */
+.farm-ic {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  display: inline-block;
+  vertical-align: -2px;
+  color: var(--ink-3);
+}
+.farm-ic-cut {
+  stroke: var(--surface);
+}
+.farm-ic-shield,
+.farm-ic-cross,
+.farm-ic-hail {
+  color: var(--crit);
+}
+.farm-ic-check {
+  color: var(--ok);
+}
+.farm-ic-compass {
+  color: var(--accent);
+}
+.farm-ic-tractor,
+.farm-ic-person,
+.farm-ic-silo,
+.farm-ic-spray,
+.farm-ic-cloudsun {
+  color: var(--ink-2);
+}
+.farm-ic-drop,
+.farm-ic-rain {
+  color: var(--farm-water);
+}
+.farm-ic-wheat,
+.farm-ic-sun {
+  color: var(--farm-grain);
+}
+.farm-ic-heat,
+.farm-ic-alert {
+  color: var(--warn);
+}
+.farm-ic-leaf {
+  color: var(--farm-ok);
+}
+
+/* -- stage ------------------------------------------------------------------------ */
+.farm-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  container: farmstage / inline-size;
+}
+.farm-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.farm-section-head,
+.farm-hero-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+}
+.farm-section-head h2,
+.farm-hero-head h2 {
+  font-size: var(--step-1);
+}
+.farm-section-head p,
+.farm-hero-head p {
+  font-size: var(--step--1);
+}
+
+/* weather strip: today + 3 days */
+.farm-wx-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.farm-wx {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+}
+.farm-wx.is-hail {
+  border: 2px solid var(--crit);
+  background: color-mix(in srgb, var(--crit-soft) 55%, var(--surface));
+  padding: 9px 11px;
+}
+.farm-wx-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 6px;
+}
+.farm-wx-date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+.farm-wx-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.farm-wx-ic {
+  width: 30px;
+  height: 30px;
+}
+.farm-wx-ic.is-sun {
+  color: var(--farm-grain);
+}
+.farm-wx-ic.is-heat,
+.farm-wx-ic.is-hail {
+  color: var(--crit);
+}
+.farm-wx-ic.is-rain {
+  color: var(--farm-water);
+}
+.farm-wx-ic.is-cloud {
+  color: var(--ink-2);
+}
+.farm-wx-temp {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--step-2);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.farm-wx-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+
+/* resource strip */
+.farm-res {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.farm-res-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+}
+.farm-res-card.is-crit {
+  border-color: var(--crit);
+  background: color-mix(in srgb, var(--crit-soft) 55%, var(--surface));
+}
+.farm-res-card.is-crit .farm-res-value,
+.farm-res-card.is-crit .farm-res-sub {
+  color: var(--crit);
+}
+.farm-res-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+.farm-res-value {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--step-1);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.farm-res-sub {
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+.farm-fill {
+  margin: 2px 0;
+}
+
+@container farmstage (max-width: 760px) {
+  .farm-res {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .farm-res-card.is-wide {
+    grid-column: span 2;
+  }
+}
+@container farmstage (max-width: 620px) {
+  .farm-wx-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container farmstage (max-width: 460px) {
+  .farm-res {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .farm-res-card.is-wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* -- hero: flower + field map --------------------------------------------------------- */
+.farm-hero-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  container: farmhero / inline-size;
+}
+.farm-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+@container farmhero (max-width: 600px) {
+  .farm-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.farm-hero,
+.farm-map {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.farm-hero figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--ink-2);
+  text-align: center;
+}
+.farm-map figcaption {
+  color: var(--ink-3);
+}
+.farm-hero-svg {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+.farm-map-svg {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+}
+.farm-hero-svg text,
+.farm-map-svg text {
+  font-family: var(--font-body);
+}
+.farm-hero-svg a,
+.farm-map-svg a {
+  cursor: pointer;
+}
+
+/* fills shared by petals, map fields, bars and legend swatches */
+.farm-petal.is-stress,
+.farm-plot.is-stress {
+  fill: var(--farm-stress);
+}
+.farm-petal.is-near,
+.farm-plot.is-near {
+  fill: var(--farm-near);
+}
+.farm-petal.is-ok,
+.farm-plot.is-ok {
+  fill: var(--farm-ok);
+}
+.farm-petal.is-harvested,
+.farm-plot.is-harvested {
+  fill: var(--farm-straw);
+}
+.farm-petal.is-cover,
+.farm-plot.is-cover {
+  fill: var(--farm-cover);
+}
+.farm-hero-svg .on-stress,
+.farm-map-svg .on-stress {
+  fill: var(--farm-on-stress);
+}
+.farm-hero-svg .on-near,
+.farm-map-svg .on-near {
+  fill: var(--farm-on-near);
+}
+.farm-hero-svg .on-ok,
+.farm-map-svg .on-ok {
+  fill: var(--farm-on-ok);
+}
+.farm-hero-svg .on-harvested,
+.farm-map-svg .on-harvested {
+  fill: var(--farm-on-straw);
+}
+.farm-hero-svg .on-cover,
+.farm-map-svg .on-cover {
+  fill: var(--farm-on-cover);
+}
+.farm-texture {
+  fill: none;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.farm-texture.is-harvested {
+  stroke: color-mix(in srgb, var(--farm-on-straw) 35%, transparent);
+  stroke-width: 1.2;
+}
+.farm-texture.is-cover {
+  stroke: color-mix(in srgb, var(--farm-on-cover) 45%, transparent);
+  stroke-width: 2.4;
+}
+
+/* the flower */
+.farm-stem {
+  stroke: var(--farm-stem);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.farm-ground {
+  fill: none;
+  stroke: color-mix(in srgb, var(--farm-yard) 60%, var(--line));
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.farm-thorn {
+  fill: var(--crit);
+}
+.farm-thorn-more {
+  fill: var(--crit);
+  font-size: 10px;
+  font-weight: 600;
+}
+.farm-petal {
+  stroke: color-mix(in srgb, var(--ink) 45%, transparent);
+  stroke-width: 1.5;
+}
+.farm-petal.is-hail-risk,
+.farm-plot.is-hail-risk {
+  stroke: var(--crit);
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+.farm-petal.is-proposed {
+  animation: farm-proposed 2.4s ease-in-out infinite;
+}
+.farm-petal-halo {
+  fill: none;
+  stroke: var(--crit);
+  animation: farm-halo 1.3s ease-in-out infinite;
+}
+.farm-petal-emoji {
+  font-size: 14px;
+}
+.farm-petal-name {
+  font-size: 9px;
+  font-weight: 700;
+}
+.farm-petal-val {
+  font-size: 9px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.farm-petal-val.is-small {
+  font-size: 8px;
+}
+.farm-petal-link:focus,
+.farm-plot-link:focus {
+  outline: none;
+}
+.farm-petal-link:hover .farm-petal,
+.farm-plot-link:hover .farm-plot {
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.farm-petal-link:focus-visible .farm-petal,
+.farm-plot-link:focus-visible .farm-plot {
+  stroke: var(--accent);
+  stroke-width: 3.5;
+  stroke-dasharray: none;
+}
+.farm-petal-g.is-shaking {
+  animation: farm-shake 0.5s ease-in-out infinite;
+}
+.farm-centre-disc {
+  fill: var(--surface-2);
+  stroke: var(--line);
+  stroke-width: 2;
+}
+.farm-centre-day {
+  fill: var(--ink-2);
+  font-size: 10px;
+}
+.farm-hero-svg .farm-centre-date {
+  fill: var(--ink);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+.farm-centre-person {
+  color: var(--ink-2);
+}
+.farm-hero-flag {
+  color: var(--crit);
+}
+.farm-hero-flag.is-heat {
+  color: var(--warn);
+}
+.farm-actions {
+  pointer-events: none;
+}
+.farm-grain {
+  fill: var(--farm-grain);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+  animation: farm-grain 1.4s ease-in-out infinite;
+}
+.farm-drop {
+  fill: var(--farm-water);
+  animation: farm-drop 1.2s ease-in infinite;
+}
+.farm-mist {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: farm-mist 1.4s ease-out infinite;
+}
+
+@keyframes farm-halo {
+  0%,
+  100% {
+    stroke-opacity: 0.1;
+    stroke-width: 2px;
+  }
+  50% {
+    stroke-opacity: 0.85;
+    stroke-width: 9px;
+  }
+}
+@keyframes farm-proposed {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+@keyframes farm-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-2px, 1px);
+  }
+  75% {
+    transform: translate(2px, -1px);
+  }
+}
+@keyframes farm-grain {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+@keyframes farm-drop {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(26px);
+    opacity: 0;
+  }
+}
+@keyframes farm-mist {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* the field map */
+.farm-map-bg {
+  fill: var(--farm-field-bg);
+}
+.farm-tracks path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--farm-yard) 55%, var(--line));
+  stroke-width: 3;
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
+}
+.farm-plot {
+  stroke: color-mix(in srgb, var(--ink) 45%, transparent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.farm-map-svg .farm-plot-name {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+}
+.farm-plot-val {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.farm-yard-mark {
+  fill: var(--farm-yard);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.farm-map-label {
+  fill: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--farm-field-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.farm-scale path {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.farm-map-svg .farm-scale text,
+.farm-map-svg .farm-north text {
+  fill: var(--ink-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.farm-north path {
+  fill: var(--ink-2);
+}
+/* drawn small on a phone: bigger labels so they stay about 10px on screen */
+@container farmhero (max-width: 380px) {
+  .farm-map-svg .farm-plot-name {
+    font-size: 13px;
+  }
+  .farm-plot-val {
+    font-size: 11px;
+  }
+}
+
+/* legend under the hero */
+.farm-legend {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.farm-sw {
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.farm-sw.is-stress {
+  background: var(--farm-stress);
+}
+.farm-sw.is-near {
+  background: var(--farm-near);
+}
+.farm-sw.is-ok {
+  background: var(--farm-ok);
+}
+.farm-sw.is-harvested {
+  background: repeating-linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--farm-on-straw) 35%, var(--farm-straw)) 0 1px,
+    var(--farm-straw) 1px 4px
+  );
+}
+.farm-sw.is-cover {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--farm-on-cover) 50%, var(--farm-cover)) 0 1.1px, transparent 1.5px) 0 0 / 4px 4px,
+    var(--farm-cover);
+}
+.farm-sw.is-hail {
+  background: var(--surface);
+  border: 2px dashed var(--crit);
+}
+.farm-sw-thorn {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 10px solid var(--crit);
+}
+
+/* -- field tiles ----------------------------------------------------------------------- */
+.farm-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+.farm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.farm-field.is-hail-risk {
+  border: 2px solid var(--crit);
+  padding: 13px 15px;
+}
+.farm-field.is-stressed {
+  border-color: var(--crit);
+  animation: farm-tile-pulse 1.3s ease-in-out infinite;
+}
+@keyframes farm-tile-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--crit) 0%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--crit) 30%, transparent);
+  }
+}
+.farm-field-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.farm-field-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--step-1);
+}
+.farm-field-head h3 a,
+.farm-peer-head h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.farm-field-head h3 a:hover,
+.farm-peer-head h3 a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.farm-field-head .chip {
+  flex: none;
+}
+.farm-emoji {
+  font-size: 1.1em;
+  line-height: 1;
+}
+.farm-field-crop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+.farm-moist {
+  position: relative;
+  height: 10px;
+  margin: 4px 0 2px;
+  border-radius: 5px;
+  background: var(--surface-2);
+}
+.farm-moist-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 5px;
+  background: var(--farm-ok);
+}
+.farm-moist-fill.is-stress {
+  background: var(--farm-stress);
+}
+.farm-moist-fill.is-near {
+  background: var(--farm-near);
+}
+.farm-moist-fill.is-harvested {
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--farm-on-straw) 35%, var(--farm-straw)) 0 1px,
+    var(--farm-straw) 1px 5px
+  );
+}
+.farm-moist-fill.is-cover {
+  background: var(--farm-cover);
+}
+.farm-moist-tick {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--ink);
+}
+.farm-field-moist {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+.farm-field-moist b {
+  color: var(--ink);
+}
+.farm-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+.farm-facts > div {
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.farm-facts dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.farm-facts dd {
+  margin: 0;
+  font-size: var(--step--1);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.farm-field-harvest {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+.farm-field-harvest b {
+  color: var(--ink);
+}
+.farm-field-risk {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--crit-soft);
+  color: var(--crit);
+  font-size: var(--step--1);
+  font-weight: 600;
+}
+.farm-field-risk .farm-ic {
+  margin-top: 2px;
+}
+.farm-remembers {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-soft);
+  font-size: var(--step--1);
+}
+.farm-field-open {
+  align-self: flex-start;
+  margin-top: auto;
+  padding-inline: 8px;
+}
+
+/* -- farms strip ----------------------------------------------------------------------- */
+.farm-peers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.farm-peer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.farm-peer.is-warn {
+  border-color: color-mix(in srgb, var(--warn) 55%, var(--line));
+}
+.farm-peer.is-crit {
+  border-color: color-mix(in srgb, var(--crit) 55%, var(--line));
+}
+.farm-peer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.farm-peer-head h3 {
+  font-size: var(--step-1);
+}
+.farm-peer-crops {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+.farm-peer-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  font-size: 0.75rem;
+}
+
+/* -- plan card ------------------------------------------------------------------------- */
+.farm-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  container: farmplan / inline-size;
+}
+.farm-plan h3:focus:not(:focus-visible) {
+  outline: none;
+}
+.farm-plan h4,
+.farm-subhead {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+.farm-delta-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.farm-delta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+.farm-delta > div {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.farm-delta > div.is-used {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.farm-delta dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.farm-delta dd {
+  margin: 0;
+  font-size: var(--step--1);
+}
+
+/* plan table: a real table when the card is wide, one stacked block per action when narrow */
+.farm-plan-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+.farm-plan-table th[scope="row"] {
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+  padding: 7px 8px;
+  vertical-align: top;
+}
+.farm-plan-table tr.is-ring {
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+}
+.farm-pt-crop {
+  white-space: nowrap;
+}
+.farm-pt-what {
+  font-weight: 600;
+}
+.farm-pt-what .chip {
+  font-weight: 600;
+  vertical-align: 1px;
+}
+.farm-pt-res,
+.farm-pt-reason {
+  color: var(--ink-2);
+}
+.farm-pt-reason {
+  min-width: 14em;
+}
+@container farmplan (max-width: 560px) {
+  .farm-plan-table,
+  .farm-plan-table tbody {
+    display: block;
+  }
+  .farm-plan-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .farm-plan-table tbody {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+  }
+  .farm-plan-table tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "field crop conf"
+      "what what what"
+      "res res res"
+      "reason reason reason";
+    align-items: center;
+    gap: 2px 8px;
+    padding: 7px 8px;
+    border-top: 1px solid var(--line);
+  }
+  .farm-plan-table tr:first-child {
+    border-top: 0;
+  }
+  .farm-plan-table th[scope="row"],
+  .farm-plan-table td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+  .farm-pt-field {
+    grid-area: field;
+  }
+  .farm-pt-crop {
+    grid-area: crop;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--ink-2);
+  }
+  .farm-pt-conf {
+    grid-area: conf;
+  }
+  .farm-pt-what {
+    grid-area: what;
+    overflow-wrap: anywhere;
+  }
+  .farm-pt-res {
+    grid-area: res;
+    font-size: 0.75rem;
+  }
+  .farm-pt-res::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: var(--ink-3);
+  }
+  .farm-pt-reason {
+    grid-area: reason;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.farm-conf {
+  font-size: var(--step--1);
+}
+.farm-summary {
+  font-size: var(--step--1);
+  color: var(--ink-2);
+}
+.farm-summary .actor {
+  font-weight: 600;
+  color: var(--ink);
+}
+.farm-blocked ul,
+.farm-help ul,
+.farm-history,
+.farm-reports,
+.farm-bubbles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.farm-blocked li {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--crit-soft);
+  border-left: 3px solid var(--crit);
+  font-size: var(--step--1);
+}
+.farm-blocked .farm-ic {
+  margin-top: 2px;
+}
+.farm-rule {
+  color: var(--ink-2);
+}
+.farm-help ul {
+  margin-top: 6px;
+}
+.farm-help li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: var(--step--1);
+}
+.farm-help-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px 10px;
+}
+.farm-help-top .farm-ic {
+  margin-right: 6px;
+}
+.farm-decide {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.farm-plan-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: none;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--crit-soft);
+  border-left: 3px solid var(--crit);
+  font-size: var(--step--1);
+}
+.farm-plan-error .farm-ic {
+  margin-top: 2px;
+}
+.farm-reject {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 8px;
+  align-items: center;
+}
+.farm-reject .farm-label {
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.farm-reject .input {
+  grid-column: 1;
+}
+.farm-reject [hidden] {
+  display: none;
+}
+.farm-reject .btn-danger {
+  grid-column: 2;
+  grid-row: 2;
+}
+.farm-history li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: var(--step--1);
+}
+.farm-history-reason {
+  flex-basis: 100%;
+  color: var(--ink-2);
+}
+
+/* -- team conversation ------------------------------------------------------------------ */
+.farm-scroll {
+  max-height: 440px;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding-right: 4px;
+  overscroll-behavior: contain;
+}
+.farm-scroll-short {
+  max-height: 340px;
+}
+.farm-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.farm-log-date {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.farm-log-list li {
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 8px;
+  padding-inline: 6px;
+  border-radius: 4px;
+}
+.farm-log-list li > .farm-ic {
+  margin-top: 3px;
+}
+.farm-log-list li > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.farm-log-list .actor {
+  margin-right: 4px;
+}
+.farm-log-warn {
+  box-shadow: inset 3px 0 0 var(--warn);
+  background: color-mix(in srgb, var(--warn-soft) 60%, transparent);
+}
+.farm-log-block {
+  box-shadow: inset 3px 0 0 var(--crit);
+  background: var(--crit-soft);
+}
+.farm-log-approved {
+  box-shadow: inset 3px 0 0 var(--ok);
+  background: var(--ok-soft);
+}
+.farm-log-rejected {
+  box-shadow: inset 3px 0 0 var(--crit);
+  background: var(--crit-soft);
+}
+
+/* -- what buyers & neighbours see ---------------------------------------------------------- */
+.farm-bubbles li {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--accent-soft);
+  font-size: var(--step--1);
+}
+.farm-bubble-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  margin-bottom: 2px;
+}
+.farm-bubble-head .chip {
+  background: var(--surface);
+}
+.farm-bubble-head time {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--ink-2);
+}
+
+/* -- neighbour farm ------------------------------------------------------------------------- */
+.farm-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.farm-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.farm-tile .chip {
+  align-self: flex-start;
+}
+.farm-tile .stat-value.farm-tile-crops {
+  font-size: var(--step-1);
+}
+.farm-chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.farm-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px 16px;
+}
+.farm-key {
+  display: inline-block;
+  width: 16px;
+  height: 0;
+  border-top: 2px solid var(--farm-grain);
+  border-radius: 1px;
+}
+.farm-key.is-soil {
+  border-top-color: var(--farm-water);
+}
+.farm-dot-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.farm-dot-key.is-free {
+  background: var(--ok);
+}
+.farm-dot-key.is-busy {
+  border: 1.5px solid var(--ink-3);
+}
+.farm-chart {
+  min-width: 0;
+}
+.farm-chart svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.farm-chart text {
+  fill: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.farm-chart .farm-chart-title {
+  fill: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+}
+.farm-grid line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.farm-grid line.is-zero {
+  stroke: var(--ink-3);
+}
+.farm-ref line {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.farm-combine-row circle.is-free {
+  fill: var(--ok);
+}
+.farm-combine-row circle.is-busy {
+  fill: var(--surface);
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+}
+.farm-col rect {
+  fill: transparent;
+}
+.farm-col line {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  opacity: 0;
+}
+.farm-col:hover line {
+  opacity: 1;
+}
+.farm-series {
+  pointer-events: none;
+}
+.farm-series polyline {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.farm-series circle {
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+.farm-series.is-silo polyline {
+  stroke: var(--farm-grain);
+}
+.farm-series.is-silo circle {
+  fill: var(--farm-grain);
+}
+.farm-series.is-soil polyline {
+  stroke: var(--farm-water);
+}
+.farm-series.is-soil circle {
+  fill: var(--farm-water);
+}
+.farm-table-toggle {
+  align-self: flex-start;
+}
+.farm-history-table {
+  max-height: 260px;
+  overflow-y: auto;
+}
+.farm-history-table td.num,
+.farm-history-table th.num {
+  text-align: right;
+}
+.farm-reports {
+  margin-top: 8px;
+}
+.farm-reports li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--step--1);
+}
+.farm-reports li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.farm-report-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.farm-latest {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.farm-note {
+  max-width: none;
+}
+
+@media (max-width: 640px) {
+  .farm-field-head h3,
+  .farm-peer-head h3 {
+    font-size: var(--step-0);
+  }
+  .farm-wx-temp {
+    font-size: var(--step-1);
+  }
+}
+
+/* Reduced motion: no pulsing, shaking or travelling grain; the states stay visible standing still. */
+@media (prefers-reduced-motion: reduce) {
+  .farm-petal-halo {
+    animation: none;
+    stroke-opacity: 0.7;
+    stroke-width: 6px;
+  }
+  .farm-petal-g.is-shaking,
+  .farm-petal.is-proposed,
+  .farm-grain,
+  .farm-drop,
+  .farm-mist {
+    animation: none;
+  }
+  .farm-field.is-stressed {
+    animation: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--crit) 30%, transparent);
+  }
+}

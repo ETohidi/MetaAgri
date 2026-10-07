@@ -1,0 +1,12 @@
+{
+  "name": "metaagri-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "MetaAgri: a multi-level farm digital twin that runs entirely in the browser",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "serve": "node tools/serve.mjs 8090",
+    "artifact": "node tools/make-artifact.mjs"
+  }
+}

@@ -1,9 +1,11 @@
 # MetaAgri demo (5 minutes)
 
-MetaAgri is a digital twin of a small arable farm in the Oderbruch and its two neighbours,
-which you can zoom through at five levels: Earth, Germany, the Oderbruch, a farm and one of
-its fields. Everything runs in the browser. The farms, fields, weather and numbers are
-simulated, and the farm names are fictional.
+MetaAgri shows how farm information moves, from the whole world down to one field. It has
+seven levels: World, EU, Country, Land, District, Farm and Field. EU and Land are in the
+breadcrumb but have no page yet; the Land page comes in v2.1. Above the farm every number
+is a real, published figure with its source and date. The farms are fictional, and
+everything about them is simulated. A badge on each number (Official, Estimated, Simulated,
+Not shown, Unknown) says which kind it is, and the two kinds never share a tile.
 
 ## Start
 
@@ -13,131 +15,136 @@ Open https://etohidi.github.io/MetaAgri/, or run it locally:
 cd web && npm run serve
 ```
 
-Then open http://127.0.0.1:8090. The season always starts the same way (seed 20260707):
-Monday 6 July, with the first plan already waiting for the farm manager. Every number below
-is what that seed shows; **Restart season** replays it.
+Then open http://127.0.0.1:8092. The page opens on **Germany**, viewed as the **Federal
+ministry**. The season always starts the same way (seed 20260707): Monday 6 July, with the
+first plan already waiting for the farm manager. Every number below is what that seed
+shows. **Simulation → Restart season** replays it.
 
-Names you'll see: the **North, West and River field agents** propose each field's work, the
-**Coordinator** bundles their proposals into one plan, the **Safety check** blocks anything
-that breaks a hard rule, the **Machinery ring** lines up help from the neighbour farms,
-**Farm** is the twin itself, and the **Farm manager** is you.
+"Viewing as" is a lens, not a login. A static site cannot hide anything from a browser, so a
+role only chooses the home page and what each level shows: everything, totals only, or a
+"Not shown" box that says why. Those boxes are how the sharing rules become visible.
 
-## Choreography
+## 1. The ministry's view (real data)
 
-1. **Zoom in.** Start on Earth and click Germany, then Brandenburg (or the Oderbruch pin).
-   On the Oderbruch map each farm is a pin sized by its area and coloured by its soil
-   moisture and silo fill. The dashed lines carry what each neighbour told the Machinery
-   ring it can share today: Gut Rohrdommelsee "can share 1 combine · 470 t", Agrarhof
-   Oderblick "can share 0 combines · 130 t" (its combine is busy). Our three fields sit in
-   the "Our fields" inset. Click **Hof Lerchenbruch**, the farm we run.
+1. **Germany, as the Federal ministry.** The heading is the question the page answers: "How
+   big are Germany's farms, how much land is watered, and how does Brandenburg compare?".
+   The line below it says these are real published statistics and that the demo farms never
+   change them. The five tiles are all **Official**: 255,010 farms, a mean farm size of
+   65 ha, 16.6 M ha of farmland, 3.3 % irrigated (2022) and a wheat yield of 78.3 dt/ha
+   (2025). Each tile compares with Brandenburg, for example 241.6 ha mean size, 3.7 times
+   as big.
+2. **The map.** Brandenburg is highlighted. Its card shows 5,370 farms, with 93.3 % of the
+   farmland on farms of 100 ha or more, and "Page coming in v2.1". Click any other Land: it
+   shows **Unknown**, never 0, because per-Land tables arrive with the v2.1 data refresh.
+3. **Needs attention** lists a real public order: the district's ban on taking surface
+   water, in force since 2020. Drought per Land is **Unknown** until v2.1.
+4. Scroll to the bottom. **Who uses this level, and what crosses its boundary** names the
+   users, what goes up, to peers and never, each with its legal basis, and the channels that
+   pass through this level (subsidies, animal health, plant health, statistics). **Data &
+   sources** lists every figure with its licence and link.
+
+## 2. Switch lenses
+
+5. **Click the Oderbruch pin.** The District page opens, still as the ministry. The ministry
+   sees only totals: 0 of 3 demo farms need help, 2 of 3 combines are free to lend and 880 t
+   of silo space is offered (all **Simulated**), next to the real ban (In force) and the
+   district's 441 farms on 123,700 ha (**Official**). The farm-by-farm table is **Not
+   shown**, with the reason.
+6. **Viewing as → District & sharing network.** Now the table appears. Hof Lerchenbruch:
+   Favourable, Needs decision, can lend its combine and "280 t (50 t kept back)", with 330 t
+   free. Gut Rohrdommelsee: its combine and 470 t. Agrarhof Oderblick: no combine, 130 t.
+   The 50 t each farm keeps for its own harvest is now explained, not hidden.
+7. Optional: **Viewing as → Global crop analyst** opens the World page with five Official
+   tiles (about 579 M farms, 85 % under 2 ha, 9 % of farmland on those small farms,
+   20 % of cropland irrigated and 40 % of food grown on it).
+
+## 3. Follow the farm manager (simulated)
+
+8. Click **Follow the farm manager** in the app bar (or on the Country page). The lens
+   switches to Farm manager and Hof Lerchenbruch opens: "What should we do today?", with
+   the weather on one line (today 25 °C and dry, Tue 7.5 mm rain). All five tiles are
+   **Simulated**: 1 of 3 fields at risk (River, near its stress line), 6,000 of 6,500 m³
+   water in the plan, 0 of 3 fields harvested, 330 of 450 t silo free, no help needed.
+
+Open **Simulation** in the app bar for Next day, Play, Heatwave, Hail warning and Restart
+season. The scenario buttons appear only on District, Farm and Field.
 
 ### Act 1: a normal day
 
-2. **Read the farm.** Today is 25 °C and dry; tomorrow brings 7.5 mm of rain. The flower has
-   one petal per field, coloured by soil moisture against the crop's stress line: North 48%,
-   West 44%, River 62% (amber, close to the potatoes' 60% stress line). On the right is the
-   **Plan for Mon 6 Jul**: West "Scout field" (0.70, "rapeseed ripening, 3 days to harvest;
-   checking seed moisture.") and River "Irrigate 25 mm · 6,000 m³ water · 1 worker" (0.80,
-   "Soil moisture 62%; forecast 10.3 mm crop water use vs 7.5 mm rain over 2 days (heading
-   for ~59%, stress below 60%)."). The resource cards read Water 6,500 → 500 m³ and Workers
-   5 → 4. Click **Approve plan**. A drop falls on the River petal, River goes to 87%, and
-   **What buyers & neighbours see** gets "Irrigation running on River field today (25 mm) —
-   the field track may be wet."
+9. The **Plan for Mon 6 Jul** sits at the top of the right column: Scout West field, and
+   Irrigate 25 mm on River field (6,000 m³ water, 1 worker), both with high confidence.
+   "Safety rules: 2 of 2 OK"; Water 6,500 → 500 m³, Workers 5 → 4. Click **Approve plan**.
+   The toast reads "Plan approved. 1 notice went out to buyers and neighbours." River goes
+   from 62 % to 87 %, and **What buyers & neighbours see** has "Irrigation running on River
+   field today (25 mm) — the field track may be wet."
 
 ### Act 2: heatwave
 
-3. **Heatwave.** Click **Heatwave** in the top bar. A red banner reads "Heatwave: water
-   permit cut to 3,600 m³/day" with "4 days left", today turns 34 °C, and the water-permit
-   card turns red ("Cut from 6,500 m³").
-
-4. **Next day.** The **Plan for Tue 7 Jul** ("3 proposals, 2/3 actions cleared by the safety
-   check"). River is at 79% but asks for 25 mm again, because the heat will dry it to ~62%
-   in two days; 6,000 m³ is more than the 3,600 m³ permit, so the card shows **Safety check
-   blocked: River field: Irrigate 25 mm. Irrigation must stay within today's water permit.**
-   The flower's stem grows a red thorn. North and West only scout. Pick **Wait for better
-   weather** and click **Reject plan**. The Team conversation reads "Farm manager: rejected
-   the Tue 7 Jul plan: Wait for better weather".
-
-5. **Next day.** In the **Plan for Wed 8 Jul** River asks for **Irrigate 15 mm · 3,600 m³**,
-   which fits the cut permit. Its note says why: "irrigating 15 mm (3,600 m³), fitted to
-   today's 3,600 m³ water permit. (Noting recent rejection: Wait for better weather)". The
-   heat has also ripened the wheat and the rapeseed twice as fast, so both want the combine
-   today; that is Act 3's story, and a hail warning tells it better.
-
-   *Side trip:* if you press **Heatwave** while a plan built before it is still waiting,
-   **Approve plan** is refused in the plan card: "This plan no longer passes the safety
-   check: irrigate for River field: Irrigation must stay within today's water permit. Reject
-   it so the field agents re-plan."
+10. **Simulation → Heatwave.** A strip marked Simulated reads "Heatwave: water permit cut to
+    3,600 m³/day, 4 days left".
+11. **Next day.** The page head now says **Blocked by safety rules**. The Plan for Tue 7 Jul
+    only scouts North and West; "Safety rules: 2 of 3 OK, 1 blocked" lists "Irrigate 25 mm
+    on River field: Irrigation must stay within today's water permit." Choose **Wait for
+    better weather** and click **Reject**.
+12. **Next day.** In the Plan for Wed 8 Jul, River asks for **Irrigate 15 mm** (3,600 m³), and
+    the row says why: "Fitted to today's 3,600 m³ water permit. Remembers your reason: “Wait
+    for better weather”." The heat has also ripened the wheat and the rapeseed, so the plan
+    harvests too. Act 3 tells that part better.
 
 ### Act 3: hail warning
 
-6. **Restart season**, then **Approve plan**: the same Monday and the same plan as step 2.
+13. **Restart season**, then **Approve plan** (the same Monday as step 9).
+14. **Simulation → Hail warning.** The strip reads "Hail warning: severe hail expected Wed
+    8 Jul. Harvest ripe crops before it hits." The weather line now ends "Wed 27 °C, hail
+    storm".
+15. **Next day.** Fields at risk: 2 of 3 (North and West: ripe crop, hail expected). The Plan
+    for Tue 7 Jul has three actions:
+    - Harvest ~324 t on North field, with our combine and 2 workers (high confidence);
+    - Harvest West field with Gut Rohrdommelsee's combine (~114 t), through the sharing
+      network (medium confidence);
+    - Deliver 108 t to Gut Rohrdommelsee, because ~438 t is coming in and only 330 t is free.
 
-7. **Hail warning.** An amber banner reads "Hail warning: severe hail expected Wed 8 Jul.
-   Harvest ripe crops before it hits." The Wed 8 Jul weather card turns red (24.0 mm rain,
-   13.7 m/s wind, "Hail storm"), Tue 7 Jul is made dry and calm, and the North and West
-   petals get a red dashed outline: both crops are now due tomorrow.
+    Workers 5 → 2, Combine 1 → 0, Silo free 330 → 0 t. "If you approve, they are told:
+    buyers (2), Gut Rohrdommelsee (2)." The Team log shows why: "conflict: the combine was
+    requested by North field and West field; kept North field (€71k at risk vs €52k), West
+    field waits". Click **Approve plan**: "Plan approved. 4 notices went out to buyers and
+    neighbours." The silo is full (0 of 450 t; the tile says it can lend 0 t now, against
+    this morning's offer of 140 t), and on the District page Gut Rohrdommelsee's free space
+    drops from 507 t to 399 t.
+16. **Next day.** The hail hits on Wed 8 Jul: "Hail hit River field: potato leaves shredded,
+    crop health down 8 points (of 100)". The wheat and rapeseed are safe in the silo; both
+    agents wait: "Wheat stubble too wet after 24.0 mm rain; drilling the cover crop once the
+    soil dries."
 
-8. **Next day.** The **Plan for Tue 7 Jul** ("4 proposals, 3/3 actions cleared by the safety
-   check", overall confidence 0.50). Both crops want the one combine, and the Coordinator
-   keeps the field with the most value at risk: "conflict: the combine was requested by
-   North field and West field; kept North field (€71k at risk vs €52k), West field waits".
-   The Machinery ring fills the gap:
-   - North · Harvest ~324 t · combine · 2 workers · 0.85 · "Hail expected Wed 8 Jul;
-     harvesting ripe wheat now."
-   - West · Harvest with Gut Rohrdommelsee's combine (~114 t) · 0.50
-   - West · Deliver 108 t to Gut Rohrdommelsee · 0.50 · "~438 t coming in today but only
-     330 t free in our silo; Gut Rohrdommelsee reports 228 t spare storage."
+## 4. Down to a field, across to a neighbour
 
-   **Neighbour help** shows each farm's answer: Gut Rohrdommelsee can share 1 combine and
-   228 t, Agrarhof Oderblick 0 combines and 53 t. The resource cards read Workers 5 → 2,
-   Combine 1 → 0, Silo free 330 → 0 t. Open the **Oderbruch** level now: the line to Gut
-   Rohrdommelsee carries a green flow (the borrowed combine) and an amber one (the
-   delivery). Back on the farm, click **Approve plan**. Grain flies into the silo and one
-   load leaves for the neighbour; our silo is full (450 of 450 t) and Hof Lerchenbruch turns
-   Critical; Gut Rohrdommelsee's free silo space drops from 507 to 399 t. Four notices go
-   out: the wheat (~324 t, confidence high) and rapeseed (~114 t, medium) harvests to
-   Buyers, and to Gut Rohrdommelsee "thanks for lending your combine for our West field
-   (rapeseed) today." and "expect about 108 t of rapeseed for storage today."
+17. Click **River field** in the field list. "What does this field need next?": soil
+    moisture day by day with a 3-day projection against the stress line, crop health "Good
+    (90/100)", disease risk, harvest and yield estimate, all Simulated. "What the field agent
+    reads" shows the exact inputs its agent sees.
+18. Open **Gut Rohrdommelsee** from the District page. As the farm manager you see only its
+    offers and their history; its soil and status are its own. Under the Federal ministry
+    lens the District page has no farm pins at all, and a farm page opened by its address
+    (`#rohrdommelsee`) shows every tile as **Not shown**, with a "Follow the farm manager"
+    button.
 
-9. **Next day.** The hail hits Wed 8 Jul: "Hail hit River field: potato leaves shredded,
-   crop health down 0.08" (River 0.90 → 0.83). North and West are safe in the silo; their
-   agents wait: "Wheat stubble too wet after 24.0 mm rain; drilling the cover crop once the
-   soil dries." Approve, then **Next day** (Thu 9 Jul, 3.3 mm): both sow a cover crop.
-   Approve, and the neighbours hear "Cover crop sown on North field after the wheat harvest."
-
-   *What if you had rejected step 8's plan* with **A neighbour farm should help with this**?
-   The storm takes 40% of both crops: "Hail hit North field: winter wheat lost 40%" (324 →
-   193 t) and West 114 → 67 t, and both agents wait: "wheat ripe but 24.0 mm rain today -
-   too wet to harvest." The reason also adds a hint to the field agents' census that the
-   Machinery ring can line up a neighbour's combine.
-
-10. **Drill into a field.** Click a petal or a field on the farm map. The field page shows
-    soil moisture day by day with a dashed 3-day projection, the stress line, rain and
-    irrigation bars, the crop right now, the last plans for this field, and **What the field
-    agent sees**: the exact census its agent reads before proposing.
-
-11. **Visit a neighbour.** Use the zoom ladder to go back to the Oderbruch and open Gut
-    Rohrdommelsee: its silo space and soil moisture since Monday, and the last reports its
-    agent gave the Machinery ring.
-
-**Play** advances the season by itself (1×, 2× or 4×). It holds while you're typing a
-rejection reason. A plan nobody decides on expires when the next day's plan arrives.
+**Play** advances the season by itself (1×, 2× or 4×). It holds while you type a rejection
+reason. A plan nobody decides on expires when the next day starts.
 
 ## What this demonstrates
 
-- **Five levels, one twin.** The same simulated state at every scale: the region on Earth,
-  the connected region in Germany, every farm's silo, combine and soil in the Oderbruch,
-  every field on the farm, every day of one field.
-- **Agents propose, a person decides.** Field agents propose each day's work, the
-  Coordinator bundles it into one plan with before/after resources, and nothing changes
-  until the farm manager approves.
-- **Safety check.** Deterministic rules screen every action before a person sees it: the
-  water permit, spray weather and the pre-harvest interval, dry-day harvests, one field per
-  machine per day, workers, and neighbour capacity. Blocked actions stay visible with the
-  rule, and an approval is re-checked against the farm as it is now.
-- **Human feedback.** A rejection reason goes back to the field agents and changes what they
-  propose next.
-- **Neighbouring farms.** Every farm's agent reports what it can share each day, and the
-  Machinery ring borrows a combine or sends surplus grain to a neighbour with room.
-- **Buyers and neighbours only hear about approved work.**
+- **Seven levels, one anatomy.** Every page has the same head (the question it answers, what
+  this role may see, one status pill), five tiles, a main column and rail, the levels panel
+  and the sources.
+- **Real and simulated, never mixed.** Real figures above the farm carry Official or
+  Estimated with source, date and licence; the fictional farms carry Simulated. A missing
+  figure is Unknown, never 0.
+- **The sharing rules are visible.** Each lens shows what that role may see; the rest is a
+  "Not shown" box that says why, and the levels panel names each channel and its legal
+  basis.
+- **Agents propose, a person decides.** Rule-based field agents propose the day's work, the
+  Coordinator bundles it, the safety rules block what is unsafe or illegal, the sharing
+  network lines up a neighbour's combine or silo, and nothing changes until the farm manager
+  approves.
+- **Feedback changes the plan.** A rejection reason goes back to the field agents, and the
+  next plan says so.

@@ -1,53 +1,141 @@
 # MetaAgri design
 
-How the twin works: the concept, the five levels, and the engine's rules, numbers and texts.
-The code is the source of truth (`web/src/engine/`); this file is its summary. If they
-disagree, fix one of them deliberately.
+How the twin works: the levels, the roles and what crosses each boundary, how a page is put
+together, then the engine's rules, numbers and texts. The code is the source of truth
+(`web/src/ui/levels.js` and `roles.js` for the level model and the lens, `web/src/engine/`
+for the simulation); this file is its summary, and [docs/CONCEPT-v2.md](docs/CONCEPT-v2.md)
+is the concept it implements (v2.0 in section 7, the owner's decisions in section 8). If code
+and docs disagree, fix one of them deliberately.
 
 ## 1. Concept
 
-A digital twin of one arable farm, **Hof Lerchenbruch**, in the Oderbruch (Brandenburg), and
-its two neighbours, **Gut Rohrdommelsee** and **Agrarhof Oderblick**. All three names are
-fictional; every number is simulated. It is MetaHospital's architecture moved to a farm (see
-the mapping table in README.md).
+MetaAgri is a twin of how farm information moves, from the world down to one field. Each
+level has a real-world user, and the page at that level shows only what that user needs and
+may see. Above the farm the numbers are real published figures (`web/data/real.json`); at the
+farm and field they come from the seeded simulation of three fictional farms in the Oderbruch:
+**Hof Lerchenbruch** (the farm the demo follows), **Gut Rohrdommelsee** and **Agrarhof
+Oderblick**. The two kinds never share a tile, every number carries a provenance badge, and
+no simulated number is drawn on a real parcel or next to a real farm's or company's name.
 
-One step is one day. The season starts on Monday 6 July 2026. Each day:
-
-1. The **simulation** rolls the weather and updates every field and neighbour farm.
-2. The **North, West and River field agents** each propose the day's work from their field's
-   census.
-3. Every **farm agent** (ours included) tells the **Machinery ring** what it can share today.
-4. The **Coordinator** bundles the proposals into one plan, settles machine conflicts, runs
-   the **Safety check**, and adds the Machinery ring's neighbour help.
-5. The plan waits for the **Farm manager** (the person using the page). Approving applies it
-   and sends notices to buyers and neighbours; rejecting sends the reason back to the field
-   agents. An undecided plan expires when the next day starts.
-
-All agents are rule-based and deterministic; there is no model call. Human-facing names in
-the log and the views: "Farm" (the twin itself), "North field agent", "West field agent",
-"River field agent", "Coordinator", "Safety check", "Machinery ring", "Farm manager" and the
-farm names. A "plan" is a bundle. The tick counter is never shown to a person, only dates
-("Mon 6 Jul", "Monday 6 July").
+It is MetaHospital's design moved to farms; [docs/SHARED-SPEC.md](docs/SHARED-SPEC.md) is the
+written spec both twins follow, and README.md has the mapping table.
 
 ## 2. Levels and routes
 
-Routes are plain hash tokens, because the claude.ai artifact viewer drops anything else.
-Unknown tokens fall back to Earth.
+Seven levels (`LEVEL_ORDER` in `levels.js`). The UI shows level names, never numbers or map
+scales. Routes are plain hash tokens, because the claude.ai artifact viewer drops anything
+else.
 
-| Level | Route | View | What it shows |
-|---|---|---|---|
-| 1 | `#earth` | `maps.js` | World map; Germany highlighted, a pin at the Oderbruch |
-| 2 | `#germany` | `maps.js` | German states, Brandenburg highlighted, the Oderbruch pin, Berlin for orientation |
-| 3 | `#oderbruch` | `maps.js` | The three farms (pins by area and status), the Machinery-ring reports on dashed lines, borrow / deliver flows while a plan asks for them, our fields in an inset, one card per farm |
-| 4 | `#lerchenbruch` | `farm.js` | Our farm: weather and forecast, resources, the flower (one petal per field), field map, field tiles, the plan with Approve / Reject, team conversation, notices |
-| 4 | `#rohrdommelsee`, `#oderblick` | `farm.js` | A neighbour: silo, combine, soil moisture, history chart, its latest reports |
-| 5 | `#lerchenbruch.north` / `.west` / `.river` | `field.js` | One field: soil-moisture chart with a 3-day projection, the crop now, map, recent plans, rejections, the agent's census |
+| Level | Route | View | The question the page answers | Numbers |
+|---|---|---|---|---|
+| World | `#world` (`#earth` redirects) | `world.js` | How many farms feed the world, how is the land shared, and how much depends on irrigation? | Official, Estimated |
+| EU | none yet | (breadcrumb only) | Its figures appear on the Country page | Official |
+| Country | `#germany` | `country.js` | How big are Germany's farms, how much land is watered, and how does Brandenburg compare? | Official |
+| Land | none yet ("coming in v2.1") | (breadcrumb, and the Brandenburg card on Country) | | Official |
+| District | `#oderbruch` | `district.js` | Which farms need help today, and who can lend it? | Simulated (the demo farms), plus Official and Estimated in their own tiles and "Real context" strip |
+| Farm | `#lerchenbruch`, `#rohrdommelsee`, `#oderblick` | `farm.js` | What should we do today? (our farm) / What does this farm offer the network today? (a neighbour) | Simulated |
+| Field | `#lerchenbruch.north`, `.west`, `.river` | `field.js` | What does this field need next? | Simulated |
 
-Only our own farm has fields. Farm status (map pins, cards): **Critical** below 35% average
-soil moisture or a silo more than 95% full, **Watch** below 45% or more than 85% full, else
-**Normal**.
+An empty or unknown hash opens the current role's home (Germany for the default Federal
+ministry lens). Only our own farm has fields. Each level's KPI labels come from
+`LEVELS[key].kpis`, so the tiles and the level model cannot drift apart.
 
-## 3. The farm
+## 3. Who uses each level, and what crosses its boundary
+
+`levels.js` holds one record per level with the same fields as MetaHospital's: `name`,
+`user`, `decides`, `up` + `upBasis`, `peers` + `peersBasis`, `never` + `neverBasis`,
+`cadence` and `kpis` (1 to 5 tile labels). `test/levels.test.js` fails if a level misses a
+field or a legal basis. EU and Land have `route: null` and a `pending` reason.
+
+Farm data does not travel up one pipe. `CHANNELS` lists the six real channels, each a chain
+of authorities from the farm upward with its legal basis: subsidies and compliance, water,
+animal health, plant health, statistics and markets, and voluntary sharing (with neighbours,
+the machinery-sharing network and buyers). Each level notes what the channels passing through
+it carry. The panel "Who uses this level, and what crosses its boundary" at the foot of every
+page shows the level's record, its ladder, and its channels with this level's hop
+highlighted. The legal bases were written from the concept and from memory; the owner should
+spot-check them before relying on them.
+
+## 4. "Viewing as": the role lens
+
+A static site cannot enforce access, so a role is a lens, not a login (`roles.js`). Four
+roles for v2.0, each with a home level:
+
+| Role | Home | World | Country | District | Farm | Field |
+|---|---|---|---|---|---|---|
+| Global crop analyst (FAO · AMIS · GEOGLAM) | World | full | totals | not shown | not shown | not shown |
+| Federal ministry (BMLEH, the default) | Country | totals | full | totals | not shown | not shown |
+| District & sharing network | District | totals | totals | full | totals | not shown |
+| Farm manager (Hof Lerchenbruch) | Farm | totals | totals | totals | full | full |
+
+"Totals" means aggregates, status bands, public orders and voluntary offers only. What a lens
+may not see is replaced by a "Not shown" box (`notShown()`) that says why and who would see
+it; those boxes are how the sharing hierarchy becomes visible. Examples: the ministry sees the
+District's totals but not the farm-by-farm table or the farm pins; the district role sees our
+farm's public status, offers, water permit and notices but not its plan, fields or log; the
+farm manager sees a neighbour only through its offers. "Follow the farm manager" (in the
+Viewing as menu, in the app bar on wide screens, and on the Country, District and hidden
+farm pages) switches to the farm lens and opens Hof Lerchenbruch. The chosen role is kept in
+this browser's storage only.
+
+## 5. Page anatomy, badges and status words
+
+Every page is built from `page.js` in the same order: page head (level and place, the
+question as the H1, a line on what it shows, "May see", one status pill, provenance and
+freshness), five KPI slots, a main column and a rail (Needs attention or the plan, Shared
+with me, Shared by me), the levels panel, and **Data & sources**. The app bar (`shell.js`)
+carries the breadcrumb of places with the level name under each, "Viewing as", and the
+Simulation drawer (Next day, Play, speed, Restart season; Heatwave and Hail warning only on
+District, Farm and Field; "About this demo" with the seed and the data state). An active
+scenario shows once, as a strip marked Simulated under the app bar, on District, Farm and
+Field only.
+
+Badges (`prov()`): **Live** (not used yet), **Official** (a published statistic),
+**Estimated** (a machine-learning output or our own calculation from open data),
+**Simulated** (the seeded twin, fictional farms only), **Illustrative** (what a flow would
+look like; nothing behind it), **Not shown** (exists, but not for this lens), **Unknown** (no
+data; never shown as 0), plus **Rule** for the rule-based agents.
+
+Status words (`status.js`), always as shape + word + colour: crop condition from GEOGLAM
+(Exceptional, Favourable, Watch, Poor, Out of season, No data), drought from the European
+Drought Observatory (Watch, Warning, Alert), and farm operations (On track, Needs decision,
+Blocked by safety rules). A farm's crop condition comes from its average soil moisture (Poor
+below 35 %, Watch below 45 %); a field's from its own stress line, health and disease risk
+(`fieldCondition()`). Confidence is shown as high (0.7 or more), medium (0.4 or more) or low,
+with the score in a tooltip.
+
+## 6. Real data
+
+`web/data/real.json` holds the hand-curated figures for v2.0, one record per key of
+`REAL_KEYS` in `src/data/real.js`: `{value, unit, label, kind, source, url, licence, asOf,
+note}`, checked against each source on 13 October 2026. Views read them with `realValue()`; a
+missing key or file shows Unknown, never 0, and the pages render first and fill in the real
+figures once the file has loaded. `web/data/LICENSES.md` lists every source's licence; the
+FAO SOLAW report and the Open-Meteo free tier are non-commercial. A scheduled refresh
+(`tools/build-data.mjs`) is planned for v2.1.
+
+## 7. How the pages word the engine
+
+The engine's texts are unchanged from v1; the views rewrite them into plain words
+(`plainLog()`, `plainReason()` and `plainActor()` in `farm.js`):
+
+| Engine | Page |
+|---|---|
+| `proposed 2 action(s): ...` | proposes 2 actions: ... |
+| `(confidence 0.85)` | (confidence high) |
+| `Blight pressure 0.64` | Blight risk high (64/100) |
+| `crop health down 0.08` | crop health down 8 points (of 100) |
+| `(Noting recent rejection: Wait for better weather)` | Remembers your reason: “Wait for better weather” |
+| `fitted to today's 3,600 m³ water permit` | Fitted to today's 3,600 m³ water permit. (under the plan row) |
+| actor `Machinery ring` | Sharing network |
+| `cleared by the safety check` | passed the safety rules |
+| ET₀ (reference evapotranspiration, in the field state) | crop water use in mm/day, with a glossary tip |
+
+A farm's silo offer is the morning's report. When an approved harvest has filled the silo
+since, the pages show only what is free now ("Can lend 0 t now; this morning's offer was
+140 t"), never more on offer than is free.
+
+## 8. The farm
 
 | Field | Crop | Area | Days to harvest | Soil moisture | Irrigable | Yield | Health | Disease |
 |---|---|---|---|---|---|---|---|---|
@@ -71,7 +159,7 @@ Neighbours: Gut Rohrdommelsee (maize, sugar beet, 310 ha, 900 t silo with 380 t 
 busy 10% of days, 52% soil moisture) and Agrarhof Oderblick (wheat, rapeseed, barley, 240 ha,
 600 t silo with 420 t used, combine busy 60% of days, cereal-heavy, 45% soil moisture).
 
-## 4. Simulation (`sim.js`, `weather.js`)
+## 9. Simulation (`sim.js`, `weather.js`)
 
 **Weather** is the same for all three farms. A 3-day forecast is generated ahead and is
 exactly what then happens.
@@ -111,11 +199,11 @@ shredded, crop health down 0.08").
 
 Both scenarios can be active at once; pressing one again while it is active changes nothing.
 
-## 5. Field agents (`planners.js`)
+## 10. Field agents (`planners.js`)
 
-Each field agent sees only its census (`twin.census(field)`): the field, today's weather, the
-forecast, today's resources, the farm manager's last rejections and an optional hint. In
-order:
+Each field agent sees only its field's readings (`twin.census(field)`): the field, today's
+weather, the forecast, today's resources, the farm manager's last rejections and an optional
+hint. In order:
 
 - **Harvested, no cover crop:** sow one (0.8), unless today has hail or ≥ 10 mm rain: then
   wait ("Wheat stubble too wet after 24.0 mm rain; drilling the cover crop once the soil
@@ -133,17 +221,19 @@ order:
 
 A rationale ends with "(Noting recent rejection: <last reason>)" while the field has recent
 rejections (the last 5 are kept). A rejection that mentions "neighbour farm" adds a hint to
-the census that the Machinery ring can line up a neighbour's combine or silo space.
+the readings that the Machinery ring can line up a neighbour's combine or silo space.
 
-## 6. Farm agents (`farms.js`)
+## 11. Farm agents (`farms.js`)
 
-Every farm answers from its own census: it can share its combine if the combine is free and
-it has no ripe crop of its own waiting, and its free silo space minus a 50 t reserve (halved
-while a scenario is active). Confidence 0.85, or 0.5 during a scenario; valid until tomorrow.
+Every farm answers from its own readings (`twin.farmCensus(farm)`): it can share its combine
+if the combine is free and it has no ripe crop of its own waiting, and its free silo space
+minus a 50 t reserve (halved while a scenario is active). Confidence 0.85, or 0.5 during a scenario; valid until tomorrow.
 Note, e.g. "combine free, 520 t silo space". The Machinery ring never borrows from our own
 farm.
 
-## 7. Coordinator and Machinery ring (`coordinator.js`)
+## 12. Coordinator and Machinery ring (`coordinator.js`)
+
+The engine's name is "Machinery ring"; the pages call it the sharing network (section 7).
 
 1. Log each proposal ("proposed 1 action(s): ...").
 2. **Conflicts:** when more than one field wants the combine (harvest) or the sprayer (spray)
@@ -165,7 +255,7 @@ farm.
    warns below 0.5), resources before and after, and the summary "Tue 7 Jul: 4 proposals,
    3/3 actions cleared by the safety check".
 
-## 8. Safety check (`safety.js`)
+## 13. Safety check (`safety.js`)
 
 Deterministic; checked in a fixed order (harvests and borrowed combines first, then
 irrigation for the driest field first, spraying, fertilizing, cover crops, the rest). Usage
@@ -195,7 +285,7 @@ illegal since it was built, the approval is refused: "This plan no longer passes
 check: irrigate for River field: Irrigation must stay within today's water permit. Reject it
 so the field agents re-plan."
 
-## 9. Approving, rejecting and notices (`twin.js`, `state.js`, `notices.js`)
+## 14. Approving, rejecting and notices (`twin.js`, `state.js`, `notices.js`)
 
 Approve: irrigation adds its millimetres to soil moisture; a harvest (own or borrowed
 combine) fills our silo and any surplus waits for the plan's deliveries, which move it to the
@@ -217,7 +307,7 @@ rejected the Tue 7 Jul plan: Wait for better weather". The six reasons on the pa
 enough workers for this", "Soil too wet to drive on", "Wait for better weather", "Wrong
 priority order", "A neighbour farm should help with this", "Other (type a reason)".
 
-## 10. Twin API
+## 15. Twin API
 
 `web/src/engine/types.js` documents every shape and the Twin API: `new Twin({ seed,
 firstPlan })`, `tick()`, `heatwave()`, `hail()`, `decide(id, "approve" | "reject", reason)`,

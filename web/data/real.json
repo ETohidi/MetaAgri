@@ -1,0 +1,315 @@
+{
+  "meta": {
+    "curatedAt": "2026-10-13",
+    "note": "Hand-curated headline figures for the levels above the farm (docs/CONCEPT-v2.md section 4.2). Every value was checked against its source on 2026-10-13; where the concept's figure differed from the source, the source wins and the value's note says so. Official = published by the source; Estimated = our own calculation from open data, or a machine-learning estimate. From v2.1, tools/build-data.mjs refreshes this file. Licences: data/LICENSES.md."
+  },
+  "values": {
+    "world.farms": {
+      "value": 579000000,
+      "unit": "farms",
+      "label": "Farms worldwide",
+      "kind": "Official",
+      "source": "FAO: Lowder, Arslan, Cabrera Cevallos, O'Neill and De La O Campos, A global update on the number of farms, farm size and farmland distribution (Agricultural Development Economics Working Paper 25-14, background paper for The State of Food and Agriculture 2025)",
+      "url": "https://openknowledge.fao.org/handle/20.500.14283/cd7373en",
+      "licence": "CC BY 4.0",
+      "asOf": "2025",
+      "note": "About 579 million farms in 2025: FAO's estimate from census data for 152 countries, projected to 2025. It replaces the earlier 'more than 608 million' (FAO 2019), which was built from older counts."
+    },
+    "world.smallFarmsShare": {
+      "value": 85,
+      "unit": "%",
+      "label": "Farms under 2 ha",
+      "kind": "Official",
+      "source": "FAO: Lowder, Arslan, Cabrera Cevallos, O'Neill and De La O Campos, A global update on the number of farms, farm size and farmland distribution (Agricultural Development Economics Working Paper 25-14, background paper for The State of Food and Agriculture 2025)",
+      "url": "https://openknowledge.fao.org/handle/20.500.14283/cd7373en",
+      "licence": "CC BY 4.0",
+      "asOf": "2025",
+      "note": "Share of all farms that are smaller than 2 hectares."
+    },
+    "world.smallFarmsLandShare": {
+      "value": 9,
+      "unit": "%",
+      "label": "Farmland those small farms work",
+      "kind": "Official",
+      "source": "FAO: Lowder, Arslan, Cabrera Cevallos, O'Neill and De La O Campos, A global update on the number of farms, farm size and farmland distribution (Agricultural Development Economics Working Paper 25-14, background paper for The State of Food and Agriculture 2025)",
+      "url": "https://openknowledge.fao.org/handle/20.500.14283/cd7373en",
+      "licence": "CC BY 4.0",
+      "asOf": "2025",
+      "note": "About 9 % of all farmland. At the other end, farms over 50 ha are under 1 % of farms but work about 75 % of the world's farmland."
+    },
+    "world.irrigatedCroplandShare": {
+      "value": 20,
+      "unit": "%",
+      "label": "Cropland that is irrigated",
+      "kind": "Official",
+      "source": "FAO: The State of the World's Land and Water Resources for Food and Agriculture 2021 (SOLAW 2021), synthesis report",
+      "url": "https://doi.org/10.4060/cb7654en",
+      "licence": "CC BY-NC-SA 3.0 IGO",
+      "asOf": "2021",
+      "note": "Rounded: irrigated farming grows about 40 % of the world's food on about 20 % of the cultivated land. The older FAO water factsheet named in the concept could not be read, so this report is cited instead."
+    },
+    "world.irrigatedFoodShare": {
+      "value": 40,
+      "unit": "%",
+      "label": "Food from irrigated land",
+      "kind": "Official",
+      "source": "FAO: The State of the World's Land and Water Resources for Food and Agriculture 2021 (SOLAW 2021), synthesis report",
+      "url": "https://doi.org/10.4060/cb7654en",
+      "licence": "CC BY-NC-SA 3.0 IGO",
+      "asOf": "2021",
+      "note": "Rounded: rain-fed farming grows the other 60 % on about 80 % of the cultivated land."
+    },
+    "world.fields2025": {
+      "value": 1580000000,
+      "unit": "field outlines",
+      "label": "Fields mapped for 2025",
+      "kind": "Estimated",
+      "source": "Fields of The World (FTW): global field boundaries 2024-2025, on Source Cooperative",
+      "url": "https://source.coop/ftw/global-data",
+      "licence": "CC BY 4.0",
+      "asOf": "2025",
+      "note": "A machine-learning model (PRUE field-boundary segmentation) drew these outlines from Sentinel-2 satellite images; it is not a count of farms. 1.58 billion for 2025 and 1.63 billion for 2024, across 195 countries and territories."
+    },
+    "eu.farms": {
+      "value": 8800000,
+      "unit": "farms",
+      "label": "Farms in the EU",
+      "kind": "Official",
+      "source": "Eurostat: Farms and farmland in the European Union - statistics (farm structure survey 2023)",
+      "url": "https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Farms_and_farmland_in_the_European_Union_-_statistics",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "EU-27, rounded as published: 8.8 million holdings on 156.2 million ha."
+    },
+    "eu.meanSizeHa": {
+      "value": 17.8,
+      "unit": "ha",
+      "label": "Mean farm size",
+      "kind": "Official",
+      "source": "Eurostat: Farms and farmland in the European Union - statistics (farm structure survey 2023)",
+      "url": "https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Farms_and_farmland_in_the_European_Union_-_statistics",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "EU-27 average farmland per holding."
+    },
+    "eu.largeFarmsLandShare": {
+      "value": 68.3,
+      "unit": "%",
+      "label": "Land on farms of 50 ha or more",
+      "kind": "Official",
+      "source": "Eurostat: Farms and farmland in the European Union - statistics (farm structure survey 2023)",
+      "url": "https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Farms_and_farmland_in_the_European_Union_-_statistics",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "The 7.6 % of EU farms that have 50 ha or more hold 68.3 % of the farmland."
+    },
+    "de.farms": {
+      "value": 255010,
+      "unit": "farms",
+      "label": "Farms",
+      "kind": "Official",
+      "source": "Eurostat: farm structure survey 2023, table ef_m_farmleg (Germany)",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/ef_m_farmleg?geo=DE40&geo=DE&geo=EU27_2020&time=2023&farmtype=TOTAL&so_eur=TOTAL&leg_form=TOTAL",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "Agricultural holdings. Destatis and the state statistics offices run the survey in Germany."
+    },
+    "de.meanSizeHa": {
+      "value": 65,
+      "unit": "ha",
+      "label": "Mean farm size",
+      "kind": "Official",
+      "source": "Eurostat: farm structure survey 2023, table ef_m_farmleg (Germany)",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/ef_m_farmleg?geo=DE40&geo=DE&geo=EU27_2020&time=2023&farmtype=TOTAL&so_eur=TOTAL&leg_form=TOTAL",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "Farmland divided by farms, both from the same table: 16,585,540 ha / 255,010 = 65.0 ha."
+    },
+    "de.uaaHa": {
+      "value": 16585540,
+      "unit": "ha",
+      "label": "Farmland",
+      "kind": "Official",
+      "source": "Eurostat: farm structure survey 2023, table ef_m_farmleg (Germany)",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/ef_m_farmleg?geo=DE40&geo=DE&geo=EU27_2020&time=2023&farmtype=TOTAL&so_eur=TOTAL&leg_form=TOTAL",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "Utilised agricultural area: arable land, grassland and permanent crops."
+    },
+    "de.irrigatedShare": {
+      "value": 3.3,
+      "unit": "%",
+      "label": "Irrigated share",
+      "kind": "Official",
+      "source": "Destatis: press release 186 of 10 May 2024 (irrigation in agriculture, 2022)",
+      "url": "https://www.destatis.de/DE/Presse/Pressemitteilungen/2024/05/PD24_186_41.html",
+      "licence": "dl-de/by-2.0",
+      "asOf": "2022",
+      "note": "About 554,000 ha of open-field farmland were irrigated in 2022, a very dry year."
+    },
+    "de.wheatYield": {
+      "value": 78.3,
+      "unit": "dt/ha",
+      "label": "Wheat yield",
+      "kind": "Official",
+      "source": "Destatis: hectare yields of selected crops over time (wheat, all kinds)",
+      "url": "https://www.destatis.de/DE/Themen/Branchen-Unternehmen/Landwirtschaft-Forstwirtschaft-Fischerei/Feldfruechte-Gruenland/Tabellen/liste-feldfruechte-zeitreihe.html",
+      "licence": "dl-de/by-2.0",
+      "asOf": "2025",
+      "note": "All wheat, winter and spring; 2025 is kept so it compares with Brandenburg's 2025 report. Destatis' table of 24 Sep 2026 also lists 2026: 72.0 dt/ha. 2024: 70.8. 1 dt/ha is 100 kg per hectare."
+    },
+    "bb.farms": {
+      "value": 5370,
+      "unit": "farms",
+      "label": "Farms",
+      "kind": "Official",
+      "source": "Eurostat: farm structure survey 2023, table ef_m_farmleg (Brandenburg, region DE40)",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/ef_m_farmleg?geo=DE40&geo=DE&geo=EU27_2020&time=2023&farmtype=TOTAL&so_eur=TOTAL&leg_form=TOTAL",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "Agricultural holdings. Other counts differ slightly by survey and threshold."
+    },
+    "bb.meanSizeHa": {
+      "value": 241.6,
+      "unit": "ha",
+      "label": "Mean farm size",
+      "kind": "Official",
+      "source": "Eurostat: farm structure survey 2023, table ef_m_farmleg (Brandenburg, region DE40)",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/ef_m_farmleg?geo=DE40&geo=DE&geo=EU27_2020&time=2023&farmtype=TOTAL&so_eur=TOTAL&leg_form=TOTAL",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "Farmland divided by farms, both from the same table: 1,297,550 ha / 5,370 = 241.6 ha, almost four times the German mean."
+    },
+    "bb.uaaHa": {
+      "value": 1297550,
+      "unit": "ha",
+      "label": "Farmland",
+      "kind": "Official",
+      "source": "Eurostat: farm structure survey 2023, table ef_m_farmleg (Brandenburg, region DE40)",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/ef_m_farmleg?geo=DE40&geo=DE&geo=EU27_2020&time=2023&farmtype=TOTAL&so_eur=TOTAL&leg_form=TOTAL",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "Utilised agricultural area."
+    },
+    "bb.largeFarmsLandShare": {
+      "value": 93.3,
+      "unit": "%",
+      "label": "Land on farms of 100 ha or more",
+      "kind": "Official",
+      "source": "Eurostat: farm structure survey 2023, table ef_m_farmleg (Brandenburg, region DE40)",
+      "url": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/ef_m_farmleg?geo=DE40&geo=DE&geo=EU27_2020&time=2023&farmtype=TOTAL&so_eur=TOTAL&leg_form=TOTAL",
+      "licence": "CC BY 4.0",
+      "asOf": "2023",
+      "note": "Farms of 100 ha or more are 39.5 % of Brandenburg's farms (2,120 of 5,370) and hold 93.3 % of its farmland (1,211,140 of 1,297,550 ha)."
+    },
+    "bb.wheatYield": {
+      "value": 62.7,
+      "unit": "dt/ha",
+      "label": "Wheat yield",
+      "kind": "Official",
+      "source": "Amt für Statistik Berlin-Brandenburg: Statistischer Bericht C II 2 - j/25, harvest of field crops and grassland in Brandenburg 2025",
+      "url": "https://download.statistik-berlin-brandenburg.de/2ab9491d4ad6b87d/98cade627095/SB_C02-02-00_2025j01_BB.pdf",
+      "licence": "CC BY 3.0 DE",
+      "asOf": "2025",
+      "note": "All wheat, so it compares with Germany's figure. Winter wheat alone: 63.2 dt/ha. 2019-2024 average: 61.2 (winter wheat 61.7)."
+    },
+    "bb.rapeseedYield": {
+      "value": 27.5,
+      "unit": "dt/ha",
+      "label": "Rapeseed yield",
+      "kind": "Official",
+      "source": "Amt für Statistik Berlin-Brandenburg: Statistischer Bericht C II 2 - j/25, harvest of field crops and grassland in Brandenburg 2025",
+      "url": "https://download.statistik-berlin-brandenburg.de/2ab9491d4ad6b87d/98cade627095/SB_C02-02-00_2025j01_BB.pdf",
+      "licence": "CC BY 3.0 DE",
+      "asOf": "2025",
+      "note": "Rapeseed and turnip rape (Raps und Rübsen), the same category as Germany's 36.4 dt/ha (Destatis, same year). Winter rapeseed alone: 27.6."
+    },
+    "bb.irrigatedHa": {
+      "value": 30900,
+      "unit": "ha",
+      "label": "Irrigated area",
+      "kind": "Official",
+      "source": "Amt für Statistik Berlin-Brandenburg: press release 71/2024 of 27 May 2024 (30,900 ha irrigated in 2022)",
+      "url": "https://www.statistik-berlin-brandenburg.de/071-2024",
+      "licence": "CC BY 3.0 DE",
+      "asOf": "2022",
+      "note": "About 2.4 % of Brandenburg's farmland, against 3.3 % for Germany."
+    },
+    "mol.farms": {
+      "value": 441,
+      "unit": "farms",
+      "label": "Farms in the district",
+      "kind": "Official",
+      "source": "Landkreis Märkisch-Oderland, agriculture office: presentation Landwirtschaft MOL 2025 (3 Feb 2026)",
+      "url": "https://www.maerkisch-oderland.de/_Resources/Persistent/7/7/4/a/774adc0271f57a9c05b8d91af81af69085d4e140/Pr%C3%A4sentation%20-%2003.02.2026%20-%20Landwirtschaft%20MOL%202025%20f%C3%BCr%20Internet%20-%20.pdf",
+      "licence": "No licence stated; figures cited with attribution",
+      "asOf": "2025",
+      "note": "457 in 2024 and 538 in 1994. The presentation does not say how farms are counted."
+    },
+    "mol.uaaHa": {
+      "value": 123700,
+      "unit": "ha",
+      "label": "Farmland in the district",
+      "kind": "Official",
+      "source": "Landkreis Märkisch-Oderland, agriculture office: presentation Landwirtschaft MOL 2025 (3 Feb 2026)",
+      "url": "https://www.maerkisch-oderland.de/_Resources/Persistent/7/7/4/a/774adc0271f57a9c05b8d91af81af69085d4e140/Pr%C3%A4sentation%20-%2003.02.2026%20-%20Landwirtschaft%20MOL%202025%20f%C3%BCr%20Internet%20-%20.pdf",
+      "licence": "No licence stated; figures cited with attribution",
+      "asOf": "2025",
+      "note": "57 % of the district's area; about 4,000 ha lost to other uses in 11 years."
+    },
+    "mol.surfaceWaterBan": {
+      "value": "In force",
+      "label": "Surface-water ban",
+      "kind": "Official",
+      "source": "Landkreis Märkisch-Oderland: general order under water law (notice of 3 Jul 2020), confirmed in force by press release 38/2026 of 16 Jul 2026",
+      "url": "https://www.maerkisch-oderland.de/_Resources/Persistent/3/5/a/1/35a18658e239a1f45895432ae039017706a854d1/bekanntmachung_03.07.2020_bekanntmachung_allgemeinverfuegung_wasserrecht.pdf.pdf",
+      "licence": "Official public notice; no licence stated",
+      "asOf": "2026-07-16",
+      "note": "Bans the permit-free ways of taking water (owner, common and riparian use) from all lakes, rivers and ditches in the district, until revoked. Exceptions: under 10 litres a day per person for non-commercial own use, and firefighting."
+    },
+    "oderbruch.waterBalanceMm": {
+      "value": -160,
+      "unit": "mm/yr",
+      "label": "Yearly water balance",
+      "kind": "Estimated",
+      "source": "Our calculation from the Open-Meteo historical weather API, default 'best_match' model (a blend of ERA5, ERA5-Land and IFS), nearest grid point to 52.65 N, 14.35 E",
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=52.65&longitude=14.35&start_date=1991-01-01&end_date=2020-12-31&daily=precipitation_sum,et0_fao_evapotranspiration&timezone=Europe/Berlin",
+      "licence": "CC BY 4.0 (Open-Meteo; the free API is for non-commercial use)",
+      "asOf": "1991-2020",
+      "note": "Rain (587 mm a year) minus the water a reference grass crop would use (747 mm), 30-year average. With ERA5 alone the gap is about 142 mm. In 2018: 445 mm of rain against 893 mm."
+    },
+    "oderbruch.medianFieldHa": {
+      "value": 6.5,
+      "unit": "ha",
+      "label": "Typical field size",
+      "kind": "Estimated",
+      "source": "Our calculation from the Brandenburg subsidy-system (IACS) parcels 2026, Land Brandenburg, as harmonised by Fields of The World",
+      "url": "https://source.coop/ftw/harmonized-field-data/de_bb",
+      "licence": "dl-de/by-2.0",
+      "asOf": "2026",
+      "note": "Median of the 4,784 cropped parcels in the box 14.15-14.65 E, 52.45-52.85 N, which is larger than the Oderbruch; mean 13.9 ha. Hedges, tree rows and set-aside strips are left out. The concept's 6.3 ha could not be reproduced exactly."
+    },
+    "prices.wheatEurT": {
+      "value": "210–240",
+      "unit": "EUR/t",
+      "label": "Milling wheat price",
+      "kind": "Official",
+      "source": "European Commission, agri-food data portal: cereal prices, Germany",
+      "url": "https://api.tech.ec.europa.eu/agrifood/api/cereal/prices?memberStateCodes=DE&beginDate=01/07/2026&endDate=06/10/2026",
+      "licence": "Reuse authorised with acknowledgement (Commission Decision 2011/833/EU)",
+      "asOf": "2026-09-28",
+      "note": "Week of 28 Sep to 4 Oct 2026, four markets: Würzburg 210, Mannheim 226.50, Hamburg 235, Köln 240. Price leaving the silo in wholesale trade, not what the farm is paid. The concept's 210-235 missed Köln."
+    },
+    "prices.rapeseedEurT": {
+      "value": 519,
+      "unit": "EUR/t",
+      "label": "Rapeseed price",
+      "kind": "Official",
+      "source": "European Commission, agri-food data portal: oilseed prices, Germany",
+      "url": "https://api.tech.ec.europa.eu/agrifood/api/oilseeds/prices?memberStateCodes=DE&beginDate=01/07/2026&endDate=06/10/2026",
+      "licence": "Reuse authorised with acknowledgement (Commission Decision 2011/833/EU)",
+      "asOf": "2026-09-28",
+      "note": "National average for the week of 28 Sep to 4 Oct 2026 (518.84). Price leaving the silo in wholesale trade, not what the farm is paid."
+    }
+  }
+}

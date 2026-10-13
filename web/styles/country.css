@@ -1,0 +1,361 @@
+/* Country screen (ui/country.js): the map of the Länder with Brandenburg and the Oderbruch pin,
+   the Land card, and the "Follow the farm manager" entry. The page head, KPI strip, panes, rail,
+   levels panel and sources come from page.css; the .real-* helpers from world.css. Tokens only
+   (base.css), so light and dark both work. SVG sizes are in viewBox units; container queries
+   enlarge the labels when the map is drawn small. */
+
+/* -- map card: the map and the Land card side by side when there is room ----------------------- */
+.cty-mapcard {
+  container-type: inline-size;
+  overflow: hidden;
+}
+.cty-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+@container (min-width: 640px) {
+  .cty-two {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+  .cty-two > .cty-land {
+    border-top: 0;
+    border-left: 1px solid var(--line);
+  }
+}
+.cty-map-wrap {
+  container-type: inline-size;
+  min-width: 0;
+  background: var(--map-water);
+}
+.cty-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+}
+.cty-empty {
+  margin: 0;
+  padding: 32px 16px;
+  color: var(--ink-2);
+  font-weight: 600;
+  text-align: center;
+}
+.cty-water {
+  fill: var(--map-water);
+}
+.cty-state {
+  fill: var(--map-land);
+  stroke: var(--map-line);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  cursor: pointer;
+  outline: none;
+  transition: fill 120ms ease;
+}
+.cty-state:hover,
+.cty-state:focus-visible {
+  fill: color-mix(in srgb, var(--map-land) 78%, var(--ink-3));
+}
+.cty-state.is-land {
+  fill: var(--map-active);
+  stroke: var(--brand);
+  stroke-width: 1.8;
+}
+.cty-state.is-land:hover,
+.cty-state.is-land:focus-visible {
+  fill: color-mix(in srgb, var(--map-active) 70%, var(--brand));
+}
+.cty-state.is-sel {
+  stroke: var(--ink);
+  stroke-width: 2.4;
+}
+.cty-state:focus-visible {
+  stroke: var(--brand);
+  stroke-width: 3;
+}
+
+/* Berlin, for orientation only */
+.cty-city-dot {
+  fill: var(--ink-3);
+  stroke: var(--map-land);
+  stroke-width: 1.5;
+}
+.cty-city-label {
+  font-family: var(--font);
+  font-size: 15px;
+  fill: var(--ink-3);
+  stroke: var(--map-land);
+  stroke-width: 3px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* the Oderbruch pin: a link to the District */
+.cty-pin {
+  cursor: pointer;
+  outline: none;
+}
+.cty-hit {
+  fill: transparent;
+}
+.cty-ring {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 3;
+}
+.cty-marker {
+  fill: var(--brand);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.cty-focus {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 2.5;
+  stroke-dasharray: 4 3;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.cty-pin:hover .cty-focus {
+  opacity: 0.8;
+}
+.cty-pin:focus-visible .cty-focus {
+  opacity: 1;
+  stroke-dasharray: none;
+  stroke-width: 3;
+}
+.cty-pin:focus-visible .cty-label-name {
+  text-decoration: underline;
+}
+.cty-pulse {
+  fill: none;
+  stroke: var(--prov-ill);
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cty-pulse 2400ms ease-out infinite;
+}
+@keyframes cty-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cty-pulse {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+.cty-label {
+  font-family: var(--font);
+  fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: 4px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+.cty-label-name {
+  font-size: 24px;
+  font-weight: 700;
+}
+.cty-label-detail {
+  font-size: 17px;
+  font-weight: 500;
+  fill: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.cty-scale-bar {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.cty-scale-label {
+  font-family: var(--font);
+  font-size: 15px;
+  fill: var(--ink-2);
+}
+@container (max-width: 420px) {
+  .cty-label-name {
+    font-size: 32px;
+  }
+  .cty-label-detail {
+    font-size: 24px;
+  }
+  .cty-city-label,
+  .cty-scale-label {
+    font-size: 21px;
+  }
+}
+
+/* -- the Land card ------------------------------------------------------------------------------- */
+.cty-land {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.cty-land-h {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cty-land-h h3 {
+  font-size: 18px;
+  color: var(--ink);
+}
+.cty-land-lvl {
+  display: inline-block;
+  margin-bottom: 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.cty-land-lede {
+  max-width: none;
+}
+.cty-land-big {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.cty-land-v {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.15;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.cty-land-l {
+  font-size: 12.5px;
+}
+.cty-cmp {
+  font-size: 13px;
+}
+table.t.cty-cmp th,
+table.t.cty-cmp td {
+  padding: 7px 8px;
+}
+table.t.cty-cmp tbody th {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  white-space: normal;
+}
+table.t.cty-cmp td .prov {
+  margin-left: 4px;
+}
+.cty-land-extra {
+  max-width: none;
+}
+.cty-land-extra b {
+  color: var(--ink);
+}
+.cty-land .pane-note {
+  margin-top: 0;
+}
+
+/* legend (in the pane footer) */
+.cty-legend {
+  justify-content: flex-start;
+  gap: 6px 18px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.cty-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cty-sw {
+  display: inline-block;
+  flex: none;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid var(--line-2);
+}
+.cty-sw-land {
+  background: var(--map-active);
+  border-color: var(--brand);
+}
+.cty-sw-pin {
+  width: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+  border-color: var(--surface);
+  box-shadow: 0 0 0 2px var(--brand-soft);
+}
+.cty-sw-state {
+  background: var(--map-land);
+}
+
+/* -- Follow the farm manager ------------------------------------------------------------------------ */
+.cty-follow {
+  background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface));
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
+}
+.cty-follow-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 16px;
+}
+.cty-follow h2 {
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+.cty-follow p {
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+.cty-follow-act {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+.cty-follow-act .btn {
+  font-weight: 650;
+}
+.cty-follow-note {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  max-width: 34ch;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.country :focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.country .cty-pin:focus-visible,
+.country .cty-state:focus-visible {
+  outline: none;
+}
+
+/* -- responsive ------------------------------------------------------------------------------------ */
+@media (max-width: 720px) {
+  .cty-follow-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cty-map {
+    max-height: none;
+  }
+}

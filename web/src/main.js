@@ -1,10 +1,17 @@
-// Boot, routing, the top bar (zoom ladder + simulation controls) and the render loop.
+// Boot, routing, the "Viewing as" role, the simulation controls' actions and the render loop. The
+// app bar itself (breadcrumb, role menu, Simulation drawer) is drawn by ui/shell.js.
 // Views live in ui/*.js and each exports render(container, ctx, { routeChanged }).
 
 import { Twin } from "./engine/twin.js";
-import { FARM_BY_ID, FIELD_BY_ID, FIELD_IDS, FIELD_NAMES, OWN_FARM } from "./data/places.js";
-import { html, plural, raw } from "./ui/dom.js";
-import * as maps from "./ui/maps.js";
+import { FARM_BY_ID, FIELD_BY_ID, FIELD_IDS, OWN_FARM } from "./data/places.js";
+import { loadRealData } from "./data/real.js";
+import { esc, plural } from "./ui/dom.js";
+import { LEVELS } from "./ui/levels.js";
+import { DEFAULT_ROLE, ROLES, roleOf } from "./ui/roles.js";
+import { createShell } from "./ui/shell.js";
+import * as worldView from "./ui/world.js";
+import * as countryView from "./ui/country.js";
+import * as districtView from "./ui/district.js";
 import * as farmView from "./ui/farm.js";
 import * as fieldView from "./ui/field.js";
 
@@ -13,53 +20,105 @@ const AUTOPLAY_MS = { 1: 5000, 2: 2500, 4: 1250 };
 const twin = new Twin();
 /** Per-viewer UI state that survives re-renders (drafts, selections, toggles). */
 const ui = { drafts: {}, autoplay: false, speed: 1 };
+/** Real open data (web/data/real.json), loaded once after the first paint; views get it as ctx.data. */
+const real = { state: "loading", data: null };
 
 const $ = (sel) => document.querySelector(sel);
 const view = $("#view");
-const ladder = $("#ladder");
-const simbar = $("#simbar");
-const statusline = $("#statusline");
 const toasts = $("#toasts");
 const topbar = $(".topbar");
-const scenarioLive = $("#scenario-live");
-const PHONE = "(max-width: 640px)";
 
-const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : "");
 const has = (obj, key) => Boolean(key) && Object.hasOwn(obj, key);
 
+// -- role: a lens, not a login (ui/roles.js) ---------------------------------------------------
+const ROLE_KEY = "metaagri.role";
+
+function loadRole() {
+  try {
+    const id = localStorage.getItem(ROLE_KEY);
+    return has(ROLES, id) ? id : DEFAULT_ROLE;
+  } catch {
+    return DEFAULT_ROLE;
+  }
+}
+function saveRole(id) {
+  try {
+    localStorage.setItem(ROLE_KEY, id);
+  } catch {
+    // private windows may block storage; the site just opens with the default lens next time
+  }
+}
+
+let role = loadRole();
+
 // -- routes -------------------------------------------------------------------
-// Only plain hash tokens survive the artifact viewer (letters, digits, . _ ~ -), so routes
-// are "earth", "germany", "oderbruch", "<farmId>" and "lerchenbruch.<fieldId>" (only our own
-// farm has a detailed twin, so only it has fields).
+// Only plain hash tokens survive the artifact viewer (letters, digits, . _ ~ -), so routes are
+// "world", "germany", "oderbruch", "<farmId>" and "lerchenbruch.<fieldId>" (only our own farm has
+// a detailed twin, so only it has fields). The old "earth" token redirects to "world"; an empty
+// or unknown hash opens the current role's home (Germany for the default ministry lens).
+// route.level is a level key of ui/levels.js (world, country, district, farm, field).
 export const routes = {
-  earth: "earth",
+  world: "world",
+  earth: "world",
   germany: "germany",
+  country: "germany",
   oderbruch: "oderbruch",
+  district: "oderbruch",
   farm: (id) => id,
   field: (field, farmId = OWN_FARM.id) => `${farmId}.${FIELD_IDS[field]}`,
 };
 
-/** { level 1-5, token, farmId? (levels 4-5), field? ("North" | "West" | "River", level 5) } */
+/** The route token of a role's home level; EU and Land have no page yet, so they open Germany. */
+function homeToken(roleId) {
+  return LEVELS[roleOf(roleId).home]?.route ?? routes.germany;
+}
+
+/**
+ * { level, token, farmId? (farm, field), field? ("North" | "West" | "River", field), redirect? }
+ * redirect: the hash is not the canonical token (#earth, #Germany, junk) and is rewritten in place.
+ */
 function parseRoute(hash) {
   let rawToken = hash.replace(/^#/, "");
   try {
     rawToken = decodeURIComponent(rawToken);
   } catch {
-    // a malformed %-escape falls through to Earth instead of blanking the app
+    // a malformed %-escape falls through to the home page instead of blanking the app
   }
-  const token = rawToken.toLowerCase();
-  if (token === "germany") return { level: 2, token };
-  if (token === "oderbruch") return { level: 3, token };
+  const r = matchRoute(rawToken.toLowerCase());
+  // An empty hash stays empty (the plain site URL opens the role's home).
+  return rawToken === "" ? r : { ...r, redirect: r.token !== rawToken };
+}
+
+function matchRoute(token) {
+  if (token === "world" || token === "earth") return { level: "world", token: "world" };
+  if (token === "germany") return { level: "country", token };
+  if (token === "oderbruch") return { level: "district", token };
   const [farmId, fieldId] = token.split(".");
   if (has(FARM_BY_ID, farmId)) {
     const farm = FARM_BY_ID[farmId];
-    if (farm.isOwn && has(FIELD_BY_ID, fieldId)) return { level: 5, token, farmId, field: FIELD_BY_ID[fieldId] };
-    return { level: 4, token: farmId, farmId };
+    if (farm.isOwn && has(FIELD_BY_ID, fieldId)) {
+      return { level: "field", token: `${farmId}.${fieldId}`, farmId, field: FIELD_BY_ID[fieldId] };
+    }
+    return { level: "farm", token: farmId, farmId };
   }
-  return { level: 1, token: "earth" };
+  // Owner decision: the site opens on the role's home; the default ministry lens opens Germany.
+  // (Every home is a known token, so this recurses once; the guard only stops a bad home looping.)
+  const home = homeToken(role);
+  return home !== token ? matchRoute(home) : { level: "country", token: routes.germany };
 }
 
-let route = parseRoute(location.hash);
+/** Rewrites a redirected token in place (#earth -> #world, junk -> home) without a history entry. */
+function settleRoute(r) {
+  if (!r.redirect) return r;
+  try {
+    history.replaceState(history.state, "", `#${r.token}`);
+  } catch {
+    // some embedded viewers forbid replaceState; the page still renders the right view
+  }
+  return r;
+}
+
+let route = settleRoute(parseRoute(location.hash));
 
 function go(token) {
   if (location.hash.replace(/^#/, "") === token) return;
@@ -67,7 +126,8 @@ function go(token) {
 }
 
 window.addEventListener("hashchange", () => {
-  route = parseRoute(location.hash);
+  route = settleRoute(parseRoute(location.hash));
+  shell.closeMenus();
   render({ routeChanged: true });
 });
 
@@ -81,130 +141,22 @@ function toast(message) {
   setTimeout(() => el.remove(), 3800);
 }
 
-// -- top bar ----------------------------------------------------------------------
-const ICONS = {
-  next: '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2.5v11l7-5.5zM11 2.5h2v11h-2z"/></svg>',
-  play: '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>',
-  pause: '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z"/></svg>',
-  heat:
-    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="currentColor"/><path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1"/></svg>',
-  hail:
-    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 10H4a2.8 2.8 0 0 1-.3-5.6A4 4 0 0 1 11.4 4a3 3 0 0 1 .6 6h-.5"/><circle cx="5.5" cy="12.6" r="1" fill="currentColor" stroke="none"/><circle cx="8.5" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="10.5" cy="11.6" r="1" fill="currentColor" stroke="none"/></svg>',
-  restart:
-    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.5v3h3"/></svg>',
-};
-
-function ladderSteps(snap) {
-  const farm = route.farmId ? FARM_BY_ID[route.farmId] : null;
-  const summary = farm ? (snap.farms ?? []).find((f) => f.id === farm.id) : null;
-  const fieldSnap = route.field ? snap.fields?.[route.field] : null;
-  return [
-    { level: 1, name: "Earth", scale: "12,742 km", token: routes.earth },
-    { level: 2, name: "Germany", scale: "876 km N–S", token: routes.germany },
-    { level: 3, name: "Oderbruch", scale: "~60 km long", token: routes.oderbruch },
-    farm
-      ? { level: 4, name: farm.name, scale: `${summary?.areaHa ?? farm.areaHa} ha`, token: routes.farm(farm.id) }
-      : { level: 4, name: "Farm", scale: "pick on the map", pending: true },
-    route.field
-      ? { level: 5, name: FIELD_NAMES[route.field], scale: `${fieldSnap?.areaHa ?? "?"} ha`, token: routes.field(route.field) }
-      : { level: 5, name: "Field", scale: farm?.isOwn ? "pick a field" : "—", pending: true },
-  ];
+/** Switches the lens, remembers it in this browser and opens the role's home level. */
+function setRole(id) {
+  if (!has(ROLES, id)) return;
+  const changed = id !== role;
+  role = id;
+  saveRole(id);
+  if (changed) toast(`Viewing as ${ROLES[id].name}. A lens for the demo, not a login.`);
+  const token = homeToken(id);
+  if (location.hash.replace(/^#/, "") === token) render({ routeChanged: changed });
+  else go(token);
 }
 
-function renderLadder(snap) {
-  ladder.innerHTML = String(
-    html`${ladderSteps(snap).map((s) => {
-      const current = s.level === route.level;
-      const inner = html`<span class="step-name">${s.name}</span><span class="step-scale">${s.scale}</span>`;
-      if (s.pending) return html`<li><span class="step is-pending">${inner}</span></li>`;
-      return html`<li><a href="#${s.token}"${current ? raw(' aria-current="page"') : ""}>${inner}</a></li>`;
-    })}`,
-  );
-}
-
-// The clock is built once so its live region announces only real day changes; the buttons
-// are rebuilt only when their state changes, so a focused button survives an ordinary tick.
-let simbarKey = null;
-let clockTime = null;
-let clockDay = null;
-
-function renderSimbar(snap) {
-  if (!clockTime) {
-    simbar.innerHTML = String(html`
-      <div class="clock" aria-live="polite" aria-atomic="true">
-        <span class="clock-time"></span>
-        <span class="clock-day"></span>
-      </div>
-      <div class="simbar-buttons"></div>
-    `);
-    clockTime = simbar.querySelector(".clock-time");
-    clockDay = simbar.querySelector(".clock-day");
-  }
-  // "Mon 6 Jul" / "Monday 6 July" -> "6 Jul" over "Monday"
-  const dayMonth = String(snap.date ?? "").split(" ").slice(1).join(" ");
-  const weekday = String(snap.longDate ?? "").split(" ")[0];
-  if (clockTime.textContent !== dayMonth) clockTime.textContent = dayMonth;
-  if (clockDay.textContent !== weekday) clockDay.textContent = weekday;
-
-  const key = `${ui.autoplay}|${ui.speed}`;
-  if (key === simbarKey) return;
-  simbarKey = key;
-  simbar.querySelector(".simbar-buttons").innerHTML = String(html`
-    <button class="btn btn-primary" id="btn-next" data-sim="next" title="Advance the season by one day">
-      ${raw(ICONS.next)} Next day
-    </button>
-    <button class="btn" id="btn-play" data-sim="play" aria-pressed="${ui.autoplay}" title="Advance automatically">
-      ${raw(ui.autoplay ? ICONS.pause : ICONS.play)} ${ui.autoplay ? "Pause" : "Play"}
-    </button>
-    <button class="btn btn-ghost" id="btn-speed" data-sim="speed" title="Autoplay speed">${ui.speed}×</button>
-    <button class="btn btn-danger" id="btn-heat" data-sim="heatwave" title="A four-day heatwave: the authority cuts today's water permit">
-      ${raw(ICONS.heat)} Heatwave
-    </button>
-    <button class="btn btn-danger" id="btn-hail" data-sim="hail" title="Severe hail expected in two days">
-      ${raw(ICONS.hail)} Hail warning
-    </button>
-    <button class="btn btn-ghost" id="btn-reset" data-sim="reset" title="Restart the season">
-      ${raw(ICONS.restart)} <span class="btn-label">Restart season</span>
-    </button>
-  `);
-}
-
-/** One banner per active scenario: the heatwave in red with its days left, the hail warning in amber. */
-function scenarioBanners(snap) {
-  return (snap.scenarios ?? []).map((msg) => {
-    const text = cap(msg);
-    if (/^heatwave/i.test(msg)) {
-      const days = snap.heatwaveDaysRemaining ?? 0;
-      return html`<span class="banner-emergency">${text}${days ? html` <span class="mono">${plural(days, "day")} left</span>` : ""}</span>`;
-    }
-    if (/^hail/i.test(msg)) {
-      return html`<span class="banner-emergency banner-warn">${text}. Harvest ripe crops before it hits.</span>`;
-    }
-    return html`<span class="banner-emergency">${text}</span>`;
-  });
-}
-
-let scenariosWere = [];
-
-function renderStatus(snap) {
-  const pending = snap.pendingBundle;
-  const scenarios = snap.scenarios ?? [];
-  // Announce a scenario once, when it starts; the visible banners below are not a live region.
-  const started = scenarios.filter((m) => !scenariosWere.includes(m));
-  if (started.length) scenarioLive.textContent = `${started.map(cap).join(". ")}.`;
-  if (!scenarios.length) scenarioLive.textContent = "";
-  scenariosWere = scenarios;
-  statusline.innerHTML = String(html`
-    <span class="chip chip-plain">Synthetic data</span>
-    <span class="chip chip-plain">Rule-based agents</span>
-    <span class="faint mono status-seed">seed ${snap.seed}</span>
-    ${
-      pending
-        ? html`<a class="chip chip-accent" href="#${routes.farm(OWN_FARM.id)}">Plan for ${pending.planFor} awaits a decision</a>`
-        : html`<span class="chip">No plan waiting</span>`
-    }
-    ${scenarioBanners(snap)}
-  `);
+/** The demo story: switch to the farm manager and open our (fictional) farm. */
+function followFarmManager() {
+  setRole("farm");
+  go(routes.farm(OWN_FARM.id));
 }
 
 // -- simulation controls ------------------------------------------------------------
@@ -228,16 +180,13 @@ function setAutoplay(on) {
   render();
 }
 
-simbar.addEventListener("click", (event) => {
-  const btn = event.target.closest("[data-sim]");
-  if (!btn) return;
-  const action = btn.dataset.sim;
+function onSimAction(action) {
   if (action === "next") {
     const bundle = twin.tick();
-    const onOwnFarm = route.level === 4 && route.farmId === OWN_FARM.id;
+    const onOwnFarm = route.level === "farm" && route.farmId === OWN_FARM.id;
     if (bundle && !onOwnFarm) toast(`${bundle.planFor}: a new plan is waiting at ${OWN_FARM.name}.`);
     // On one-column layouts the plan sits below the farm overview; bring the new one into view.
-    if (bundle && onOwnFarm && matchMedia("(max-width: 980px)").matches) {
+    if (bundle && onOwnFarm && matchMedia("(max-width: 1180px)").matches) {
       view.querySelector('[id$="plan-title"]')?.scrollIntoView({ block: "start" });
     }
   } else if (action === "play") {
@@ -249,20 +198,33 @@ simbar.addEventListener("click", (event) => {
   } else if (action === "heatwave") {
     const daysLeft = twin.snapshot().heatwaveDaysRemaining ?? 0;
     const { scenario } = twin.heatwave() ?? {};
-    toast(daysLeft > 0 ? `The heatwave is already on: ${plural(daysLeft, "day")} left.` : `${cap(scenario ?? "heatwave")}.`);
+    toast(
+      daysLeft > 0
+        ? `The simulated heatwave is already on: ${plural(daysLeft, "day")} left.`
+        : `Simulated ${scenario ?? "heatwave"}.`,
+    );
   } else if (action === "hail") {
     const already = twin.snapshot().hailDate;
     const { scenario } = twin.hail() ?? {};
     toast(
       already
-        ? `A hail warning is already out: severe hail expected ${already}.`
-        : `${cap(scenario ?? "hail warning")}. Harvest ripe crops before it hits.`,
+        ? `A simulated hail warning is already out: severe hail expected ${already}.`
+        : `Simulated ${scenario ?? "hail warning"}. Harvest ripe crops before it hits.`,
     );
   } else if (action === "reset") {
     ui.drafts = {};
     twin.reset();
     toast(`The season restarted. It is ${twin.snapshot().longDate} again.`);
   }
+}
+
+const shell = createShell({
+  ui,
+  routes,
+  onAction: onSimAction,
+  onRole: setRole,
+  onFollow: followFarmManager,
+  onToggle: () => updateSticky(),
 });
 
 // Any element with data-go="<route token>" navigates (cards, pins, table rows).
@@ -281,7 +243,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 // -- render loop -------------------------------------------------------------------
-const VIEWS = { 1: maps, 2: maps, 3: maps, 4: farmView, 5: fieldView };
+const VIEWS = { world: worldView, country: countryView, district: districtView, farm: farmView, field: fieldView };
 let deferred = false;
 let pointerDown = false;
 
@@ -351,9 +313,7 @@ function restoreFocus(selectors) {
 function render({ routeChanged = false } = {}) {
   const snap = twin.snapshot();
   const focused = routeChanged ? null : focusKey();
-  renderLadder(snap);
-  renderSimbar(snap);
-  renderStatus(snap);
+  shell.render(route, snap, { role, homeToken: homeToken(role), dataState: real.state, data: real.data });
   updateSticky();
 
   if (!routeChanged && isBusy()) {
@@ -362,7 +322,20 @@ function render({ routeChanged = false } = {}) {
     return;
   }
   deferred = false;
-  const ctx = { twin, snap, route, routes, go, ui, toast, rerender: () => render() };
+  const ctx = {
+    twin,
+    snap,
+    route,
+    routes,
+    go,
+    ui,
+    toast,
+    rerender: () => render(),
+    data: real.data,
+    dataState: real.state,
+    role,
+    setRole,
+  };
   const mod = VIEWS[route.level];
   // Views re-assign the handlers they need on every render; clear the previous view's.
   view.onclick = view.onchange = view.oninput = view.onsubmit = view.onkeydown = null;
@@ -380,13 +353,9 @@ function render({ routeChanged = false } = {}) {
   }
 }
 
-// -- sticky header: on phones only the simulation strip stays on screen ------------------------
-// The whole header stays sticky with a negative top, so everything above the strip scrolls away.
+// -- sticky header: anchors scroll in below it (--sticky-h) ---------------------------------------
 function updateSticky() {
-  const phone = matchMedia(PHONE).matches;
-  topbar.style.setProperty("--topbar-stick", phone ? `${-simbar.offsetTop}px` : "0px");
-  const visible = phone ? simbar.offsetHeight : topbar.offsetHeight;
-  document.documentElement.style.setProperty("--sticky-h", `${visible}px`);
+  document.documentElement.style.setProperty("--sticky-h", `${topbar.offsetHeight}px`);
 }
 if (typeof ResizeObserver === "function") new ResizeObserver(updateSticky).observe(topbar);
 
@@ -395,5 +364,22 @@ view.addEventListener("focusout", renderIfDeferred);
 twin.subscribe(() => render());
 render({ routeChanged: true });
 
+// Real data loads after the first paint; the current view re-renders with it once it arrives.
+// loadRealData() resolves even when the file fails (real: null, errors.real set).
+Promise.resolve()
+  .then(() => loadRealData())
+  .then(
+    (data) => {
+      real.data = data ?? null;
+      real.state = data?.real ? "ready" : "error";
+      if (data?.errors?.real) console.warn("MetaAgri: real data did not load", data.errors.real);
+    },
+    (err) => {
+      real.state = "error";
+      console.warn("MetaAgri: real data did not load", err);
+    },
+  )
+  .then(() => render());
+
 // Exposed for debugging in the browser console.
-window.metaagri = { twin, ui };
+window.metaagri = { twin, ui, esc, real, routes, setRole, get role() { return role; } };

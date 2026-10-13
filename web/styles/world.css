@@ -1,0 +1,312 @@
+/* World screen (ui/world.js): the world map with Germany and the Oderbruch, and the farmland
+   shares. The page head, KPI strip, panes, rail, levels panel and sources come from page.css.
+   The .real-* helpers at the top mark real values that are missing (Unknown, never 0); the
+   Country page uses them too. Tokens only (base.css), so light and dark both work. SVG sizes
+   are in viewBox units; container queries enlarge the labels when the map is drawn small. */
+
+/* -- real values: Unknown, loading, as-of (shared with country.css) ------------------------ */
+.real-unknown {
+  color: var(--ink-3);
+  font-style: italic;
+  font-weight: 500;
+}
+.real-loading {
+  color: var(--ink-3);
+}
+.real-asof,
+.real-muted {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+.pane .kv dd .prov {
+  margin-left: 4px;
+}
+
+/* -- the map card ----------------------------------------------------------------------------- */
+.w-mapcard {
+  overflow: hidden;
+}
+.w-map-wrap {
+  container-type: inline-size;
+  background: var(--surface);
+}
+.w-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+}
+.w-empty {
+  margin: 0;
+  padding: 32px 16px;
+  color: var(--ink-2);
+  font-weight: 600;
+  text-align: center;
+}
+.w-sphere {
+  fill: var(--map-water);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.w-graticule {
+  stroke: color-mix(in srgb, var(--ink-3) 22%, transparent);
+  stroke-width: 0.5;
+}
+.w-land {
+  fill: var(--map-land);
+}
+.w-borders {
+  stroke: var(--map-line);
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+}
+
+/* Germany: one link, with a generous hit area around the small shape */
+.w-de {
+  cursor: pointer;
+  outline: none;
+}
+.w-hit {
+  fill: transparent;
+}
+.w-de-shape {
+  fill: var(--map-active);
+  stroke: var(--brand);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  transition: fill 150ms ease;
+}
+.w-target {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 1.5;
+  opacity: 0.7;
+}
+.w-focus {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 2.5;
+  stroke-dasharray: 4 3;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.w-de:hover .w-focus {
+  opacity: 0.8;
+}
+.w-de:focus-visible .w-focus {
+  opacity: 1;
+  stroke-dasharray: none;
+  stroke-width: 3;
+}
+.w-de:hover .w-de-shape,
+.w-de:focus-visible .w-de-shape {
+  fill: color-mix(in srgb, var(--map-active) 65%, var(--brand));
+}
+.w-leader {
+  stroke: var(--brand);
+  stroke-width: 1.5;
+}
+.w-marker {
+  fill: var(--brand);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+.w-pulse {
+  fill: none;
+  stroke: var(--prov-ill);
+  stroke-width: 2.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: w-pulse 2400ms ease-out infinite;
+}
+@keyframes w-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .w-pulse {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+/* labels: a halo keeps them readable over borders and land */
+.w-label {
+  font-family: var(--font);
+  fill: var(--ink);
+  stroke: var(--surface);
+  stroke-width: 4px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+}
+.w-label-name {
+  font-size: 19px;
+  font-weight: 700;
+}
+.w-label-detail {
+  font-size: 14px;
+  font-weight: 500;
+  fill: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.w-label-demo {
+  fill: var(--prov-ill);
+}
+.w-de:focus-visible .w-label-name {
+  text-decoration: underline;
+}
+@container (max-width: 640px) {
+  .w-label-name {
+    font-size: 30px;
+  }
+  .w-label-detail {
+    font-size: 23px;
+  }
+  .w-label {
+    stroke-width: 6px;
+  }
+}
+@container (max-width: 420px) {
+  .w-label-name {
+    font-size: 38px;
+  }
+  .w-label-detail {
+    font-size: 29px;
+  }
+  .w-label-demo {
+    display: none;
+  }
+}
+
+/* legend (in the pane footer) */
+.w-legend {
+  justify-content: flex-start;
+  gap: 6px 18px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.w-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.w-sw {
+  display: inline-block;
+  flex: none;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid var(--line-2);
+}
+.w-sw-de {
+  background: var(--map-active);
+  border-color: var(--brand);
+}
+.w-sw-marker {
+  width: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+  border-color: var(--surface);
+}
+.w-sw-land {
+  background: var(--map-land);
+}
+.w-sw-pulse {
+  width: 10px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid var(--prov-ill);
+}
+
+/* -- farmland and food shares: a 100 % bar per published share ------------------------------------ */
+.w-shares {
+  display: grid;
+  gap: 18px;
+}
+.w-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+}
+.w-split {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.w-split-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.w-split-bar {
+  display: flex;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+.w-seg {
+  display: block;
+  height: 100%;
+}
+.w-seg.is-a {
+  background: var(--seq-4);
+}
+.w-seg.is-b {
+  background: var(--irrigation);
+}
+.w-seg.is-rest {
+  background: var(--seq-1);
+}
+.w-split-l {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+.w-split-l b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.w-split-none {
+  margin: 0;
+  font-size: 13px;
+}
+.w-fields {
+  display: inline;
+  max-width: 80ch;
+}
+.w-fields b {
+  color: var(--ink);
+}
+
+.world :focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.world .w-de:focus-visible {
+  outline: none;
+}
+
+/* -- responsive ------------------------------------------------------------------------------------ */
+@media (max-width: 720px) {
+  .w-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .w-map {
+    max-height: none;
+  }
+}

@@ -1,4 +1,4 @@
-// The three designed demo moments (DESIGN.md section 9, DEMO.md), driven through the Twin
+// The three designed demo moments (DESIGN.md section 14, DEMO.md), driven through the Twin
 // exactly like the page does: first as a sweep over seeds 0..29 (each moment must happen in
 // at least 80% of them; the rates are printed), then the default seed's walkthrough, pinned
 // number by number so the docs can quote it.

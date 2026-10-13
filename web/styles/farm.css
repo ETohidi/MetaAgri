@@ -1,12 +1,12 @@
-/* Level 4: a farm. Own farm = weather and resource strips, the hero flower beside the field
-   map, field tiles, the farms strip, and the plan, conversation and notices in the panel.
-   Neighbour farm = tiles, a two-panel history chart and its latest reports. Every class
-   starts farm-.
+/* Farm level (src/ui/farm.js): the field map and list, the hero flower behind its toggle, the plan
+   card at the top of the rail (a bottom sheet on a phone), the folded panes (why, team log,
+   notices), the sharing panes and the neighbour's offer chart. The page anatomy it shares with
+   every level lives in page.css. Every class starts farm-. Tokens only, so both themes work.
 
-   Field colours (petals, map fields, moisture bars) say where the soil stands against the
-   crop's stress line: rust below it, amber within 10 points, teal-green comfortable. The
-   three were checked for colour-blind separation in both themes; harvested and cover-crop
-   fields also carry a texture (stubble rows, seedling dots) so they never rely on colour. */
+   Field colours (petals, map fields, moisture bars) say where the soil stands against the crop's
+   stress line: rust below it, amber within 10 points, teal-green comfortable. Harvested and
+   cover-crop fields also carry a texture (stubble rows, seedling dots), so they never rely on
+   colour alone. */
 :root {
   --farm-stress: #bb4b2b;
   --farm-near: #e0a526;
@@ -20,7 +20,7 @@
   --farm-on-straw: #2b2614;
   --farm-on-cover: #0d2620;
   /* marks: grain, water, the flower's stem, the farmyard */
-  --farm-grain: #c9940a;
+  --farm-grain: #a87a06;
   --farm-water: #2f7fd0;
   --farm-stem: #4f7a2a;
   --farm-yard: #8a5a1c;
@@ -64,21 +64,50 @@
 }
 
 .farm-caption {
-  font-size: var(--step--1);
+  font-size: 12.5px;
+  color: var(--ink-3);
 }
-.farm-chips .chip {
-  white-space: normal;
+.farm-pg .pane-head {
+  flex-wrap: wrap;
 }
-/* "Plan ... is waiting" only matters when the plan sits below the stage (one column) */
-.farm-jump {
-  display: none;
+.farm-pg .pane-head > div:first-child {
+  flex: 1 1 220px;
+  min-width: 0;
 }
-@media (max-width: 980px) {
-  .farm-jump {
-    display: inline-flex;
-    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-    color: var(--accent);
-  }
+.farm-head-side {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 8px;
+  flex: none;
+}
+.farm-subhead {
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.farm-confword {
+  white-space: nowrap;
+  color: var(--ink-3);
+  cursor: help;
+}
+.farm-confword.is-low {
+  color: var(--crit);
+  font-weight: 600;
+}
+.farm-asfarm {
+  min-height: 38px;
+}
+.farm-hidden-body {
+  display: grid;
+  gap: 12px;
+}
+.farm-reach {
+  max-width: 420px;
 }
 
 /* -- icons ------------------------------------------------------------------------ */
@@ -99,24 +128,19 @@
   color: var(--crit);
 }
 .farm-ic-check {
-  color: var(--ok);
+  color: var(--good);
 }
 .farm-ic-compass {
-  color: var(--accent);
+  color: var(--brand);
 }
 .farm-ic-tractor,
-.farm-ic-person,
-.farm-ic-silo,
-.farm-ic-spray,
-.farm-ic-cloudsun {
+.farm-ic-person {
   color: var(--ink-2);
 }
-.farm-ic-drop,
-.farm-ic-rain {
+.farm-ic-drop {
   color: var(--farm-water);
 }
-.farm-ic-wheat,
-.farm-ic-sun {
+.farm-ic-wheat {
   color: var(--farm-grain);
 }
 .farm-ic-heat,
@@ -127,268 +151,205 @@
   color: var(--farm-ok);
 }
 
-/* -- stage ------------------------------------------------------------------------ */
-.farm-stage {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  container: farmstage / inline-size;
-}
-.farm-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.farm-section-head,
-.farm-hero-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 12px;
-}
-.farm-section-head h2,
-.farm-hero-head h2 {
-  font-size: var(--step-1);
-}
-.farm-section-head p,
-.farm-hero-head p {
-  font-size: var(--step--1);
-}
-
-/* weather strip: today + 3 days */
-.farm-wx-strip {
+/* =====================================================================================
+   Fields today: map, list and the flower
+   ===================================================================================== */
+.farm-fields-body {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-.farm-wx {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-}
-.farm-wx.is-hail {
-  border: 2px solid var(--crit);
-  background: color-mix(in srgb, var(--crit-soft) 55%, var(--surface));
-  padding: 9px 11px;
-}
-.farm-wx-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0 6px;
-}
-.farm-wx-date {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--ink-2);
-}
-.farm-wx-main {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.farm-wx-ic {
-  width: 30px;
-  height: 30px;
-}
-.farm-wx-ic.is-sun {
-  color: var(--farm-grain);
-}
-.farm-wx-ic.is-heat,
-.farm-wx-ic.is-hail {
-  color: var(--crit);
-}
-.farm-wx-ic.is-rain {
-  color: var(--farm-water);
-}
-.farm-wx-ic.is-cloud {
-  color: var(--ink-2);
-}
-.farm-wx-temp {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: var(--step-2);
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-.farm-wx-sub {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 10px;
-  font-size: 0.75rem;
-  color: var(--ink-2);
-}
-
-/* resource strip */
-.farm-res {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-}
-.farm-res-card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-}
-.farm-res-card.is-crit {
-  border-color: var(--crit);
-  background: color-mix(in srgb, var(--crit-soft) 55%, var(--surface));
-}
-.farm-res-card.is-crit .farm-res-value,
-.farm-res-card.is-crit .farm-res-sub {
-  color: var(--crit);
-}
-.farm-res-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
-}
-.farm-res-value {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: var(--step-1);
-  line-height: 1.15;
-  font-variant-numeric: tabular-nums;
-}
-.farm-res-sub {
-  font-size: 0.75rem;
-  color: var(--ink-2);
-}
-.farm-fill {
-  margin: 2px 0;
-}
-
-@container farmstage (max-width: 760px) {
-  .farm-res {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .farm-res-card.is-wide {
-    grid-column: span 2;
-  }
-}
-@container farmstage (max-width: 620px) {
-  .farm-wx-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@container farmstage (max-width: 460px) {
-  .farm-res {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .farm-res-card.is-wide {
-    grid-column: 1 / -1;
-  }
-}
-
-/* -- hero: flower + field map --------------------------------------------------------- */
-.farm-hero-card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  container: farmhero / inline-size;
-}
-.farm-hero-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  grid-template-areas: "map list";
   gap: 16px;
   align-items: start;
+  container: farmfields / inline-size;
 }
-@container farmhero (max-width: 600px) {
-  .farm-hero-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.farm-fields-body.with-flower {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas: "map hero" "list list";
 }
-.farm-hero,
+.farm-fields-body.with-flower .farm-map-svg {
+  max-width: 340px;
+}
 .farm-map {
+  grid-area: map;
   margin: 0;
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
+}
+.farm-hero {
+  grid-area: hero;
+  margin: 0;
+  display: grid;
   gap: 6px;
   min-width: 0;
 }
 .farm-hero figcaption {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
   gap: 2px;
-  color: var(--ink-2);
   text-align: center;
 }
-.farm-map figcaption {
-  color: var(--ink-3);
+.farm-flist-wrap {
+  grid-area: list;
+  min-width: 0;
 }
-.farm-hero-svg {
-  width: 100%;
-  max-width: 400px;
-  height: auto;
-  margin: 0 auto;
-  overflow: visible;
-}
-.farm-map-svg {
-  width: 100%;
-  max-width: 460px;
-  height: auto;
-  margin: 0 auto;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-}
-.farm-hero-svg text,
-.farm-map-svg text {
-  font-family: var(--font-body);
-}
-.farm-hero-svg a,
-.farm-map-svg a {
-  cursor: pointer;
+@media (max-width: 880px) {
+  .farm-fields-body,
+  .farm-fields-body.with-flower {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "map" "hero" "list";
+  }
+  .farm-map-svg {
+    max-width: 360px;
+  }
 }
 
-/* fills shared by petals, map fields, bars and legend swatches */
-.farm-petal.is-stress,
-.farm-plot.is-stress {
+/* the compact field list */
+.farm-flist tbody tr[data-go] {
+  cursor: pointer;
+}
+.farm-flist tbody tr:hover {
+  background: var(--surface-2);
+}
+.farm-fl-name {
+  font-weight: 600;
+}
+.farm-fl-name a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.farm-fl-name a:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+.farm-fl-name small,
+.farm-fl-moist small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+.farm-fl-moist {
+  min-width: 140px;
+}
+@media (max-width: 720px) {
+  .farm-fl-moist {
+    min-width: 110px;
+  }
+  .farm-fl-name .show-s .pill {
+    margin-top: 4px;
+  }
+}
+.farm-fl-moist small b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.farm-fl-harvest {
+  white-space: nowrap;
+}
+.farm-moist {
+  position: relative;
+  height: 10px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+.farm-moist-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 4px;
+}
+.farm-moist-fill.is-stress {
+  background: var(--farm-stress);
+}
+.farm-moist-fill.is-near {
+  background: var(--farm-near);
+}
+.farm-moist-fill.is-ok {
+  background: var(--farm-ok);
+}
+/* the stress line: a tick that reaches above and below the bar */
+.farm-moist-tick {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--ink);
+}
+
+/* the field map */
+.farm-map-svg {
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+}
+.farm-map-svg text {
+  font-family: var(--font);
+}
+.farm-map-svg a,
+.farm-hero-svg a {
+  cursor: pointer;
+}
+.farm-map-bg {
+  fill: var(--farm-field-bg);
+}
+.farm-tracks path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--farm-yard) 55%, var(--line));
+  stroke-width: 3;
+  stroke-dasharray: 2 5;
+  stroke-linecap: round;
+}
+.farm-plot,
+.farm-petal {
+  stroke: color-mix(in srgb, var(--ink) 45%, transparent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.farm-plot.is-stress,
+.farm-petal.is-stress {
   fill: var(--farm-stress);
 }
-.farm-petal.is-near,
-.farm-plot.is-near {
+.farm-plot.is-near,
+.farm-petal.is-near {
   fill: var(--farm-near);
 }
-.farm-petal.is-ok,
-.farm-plot.is-ok {
+.farm-plot.is-ok,
+.farm-petal.is-ok {
   fill: var(--farm-ok);
 }
-.farm-petal.is-harvested,
-.farm-plot.is-harvested {
+.farm-plot.is-harvested,
+.farm-petal.is-harvested {
   fill: var(--farm-straw);
 }
-.farm-petal.is-cover,
-.farm-plot.is-cover {
+.farm-plot.is-cover,
+.farm-petal.is-cover {
   fill: var(--farm-cover);
 }
-.farm-hero-svg .on-stress,
-.farm-map-svg .on-stress {
+.farm-plot.is-hail-risk,
+.farm-petal.is-hail-risk {
+  stroke: var(--crit);
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+.farm-map-svg .on-stress,
+.farm-hero-svg .on-stress {
   fill: var(--farm-on-stress);
 }
-.farm-hero-svg .on-near,
-.farm-map-svg .on-near {
+.farm-map-svg .on-near,
+.farm-hero-svg .on-near {
   fill: var(--farm-on-near);
 }
-.farm-hero-svg .on-ok,
-.farm-map-svg .on-ok {
+.farm-map-svg .on-ok,
+.farm-hero-svg .on-ok {
   fill: var(--farm-on-ok);
 }
-.farm-hero-svg .on-harvested,
-.farm-map-svg .on-harvested {
+.farm-map-svg .on-harvested,
+.farm-hero-svg .on-harvested {
   fill: var(--farm-on-straw);
 }
-.farm-hero-svg .on-cover,
-.farm-map-svg .on-cover {
+.farm-map-svg .on-cover,
+.farm-hero-svg .on-cover {
   fill: var(--farm-on-cover);
 }
 .farm-texture {
@@ -404,8 +365,106 @@
   stroke: color-mix(in srgb, var(--farm-on-cover) 45%, transparent);
   stroke-width: 2.4;
 }
+.farm-map-svg .farm-plot-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+.farm-plot-val {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.farm-plot-link:focus,
+.farm-petal-link:focus {
+  outline: none;
+}
+.farm-plot-link:hover .farm-plot,
+.farm-petal-link:hover .farm-petal {
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.farm-plot-link:focus-visible .farm-plot,
+.farm-petal-link:focus-visible .farm-petal {
+  stroke: var(--brand);
+  stroke-width: 3.5;
+  stroke-dasharray: none;
+}
+.farm-yard-mark {
+  fill: var(--farm-yard);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.farm-map-label {
+  fill: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--farm-field-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.farm-scale path {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.farm-map-svg .farm-scale text,
+.farm-map-svg .farm-north text {
+  fill: var(--ink-2);
+  font-size: 10px;
+}
+.farm-north path {
+  fill: var(--ink-2);
+}
 
-/* the flower */
+/* legend under the fields */
+.farm-legend {
+  gap: 6px 14px;
+}
+.farm-sw {
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.farm-sw.is-stress {
+  background: var(--farm-stress);
+}
+.farm-sw.is-near {
+  background: var(--farm-near);
+}
+.farm-sw.is-ok {
+  background: var(--farm-ok);
+}
+.farm-sw.is-harvested {
+  background: repeating-linear-gradient(0deg, color-mix(in srgb, var(--farm-on-straw) 35%, var(--farm-straw)) 0 1px, var(--farm-straw) 1px 4px);
+}
+.farm-sw.is-cover {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--farm-on-cover) 50%, var(--farm-cover)) 0 1.1px, transparent 1.5px) 0 0 / 4px 4px,
+    var(--farm-cover);
+}
+.farm-sw.is-hail {
+  background: var(--surface);
+  border: 2px dashed var(--crit);
+}
+.farm-sw-thorn {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 10px solid var(--crit);
+}
+
+/* the flower (behind "Show the flower") */
+.farm-hero-svg {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+.farm-hero-svg text {
+  font-family: var(--font);
+}
 .farm-stem {
   stroke: var(--farm-stem);
   stroke-width: 4;
@@ -417,23 +476,13 @@
   stroke-width: 3;
   stroke-linecap: round;
 }
-.farm-thorn {
+.farm-thorn,
+.farm-thorn-more {
   fill: var(--crit);
 }
 .farm-thorn-more {
-  fill: var(--crit);
   font-size: 10px;
   font-weight: 600;
-}
-.farm-petal {
-  stroke: color-mix(in srgb, var(--ink) 45%, transparent);
-  stroke-width: 1.5;
-}
-.farm-petal.is-hail-risk,
-.farm-plot.is-hail-risk {
-  stroke: var(--crit);
-  stroke-width: 2.5;
-  stroke-dasharray: 5 3;
 }
 .farm-petal.is-proposed {
   animation: farm-proposed 2.4s ease-in-out infinite;
@@ -458,21 +507,6 @@
 .farm-petal-val.is-small {
   font-size: 8px;
 }
-.farm-petal-link:focus,
-.farm-plot-link:focus {
-  outline: none;
-}
-.farm-petal-link:hover .farm-petal,
-.farm-plot-link:hover .farm-plot {
-  stroke: var(--ink);
-  stroke-width: 2.5;
-}
-.farm-petal-link:focus-visible .farm-petal,
-.farm-plot-link:focus-visible .farm-plot {
-  stroke: var(--accent);
-  stroke-width: 3.5;
-  stroke-dasharray: none;
-}
 .farm-petal-g.is-shaking {
   animation: farm-shake 0.5s ease-in-out infinite;
 }
@@ -487,18 +521,8 @@
 }
 .farm-hero-svg .farm-centre-date {
   fill: var(--ink);
-  font-family: var(--font-display);
   font-size: 14px;
   font-weight: 700;
-}
-.farm-centre-person {
-  color: var(--ink-2);
-}
-.farm-hero-flag {
-  color: var(--crit);
-}
-.farm-hero-flag.is-heat {
-  color: var(--warn);
 }
 .farm-actions {
   pointer-events: none;
@@ -522,7 +546,6 @@
   transform-origin: center;
   animation: farm-mist 1.4s ease-out infinite;
 }
-
 @keyframes farm-halo {
   0%,
   100% {
@@ -594,508 +617,119 @@
   }
 }
 
-/* the field map */
-.farm-map-bg {
-  fill: var(--farm-field-bg);
-}
-.farm-tracks path {
-  fill: none;
-  stroke: color-mix(in srgb, var(--farm-yard) 55%, var(--line));
-  stroke-width: 3;
-  stroke-dasharray: 2 5;
-  stroke-linecap: round;
-}
-.farm-plot {
-  stroke: color-mix(in srgb, var(--ink) 45%, transparent);
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-}
-.farm-map-svg .farm-plot-name {
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-}
-.farm-plot-val {
-  font-size: 10px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.farm-yard-mark {
-  fill: var(--farm-yard);
-  stroke: var(--surface);
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-}
-.farm-map-label {
-  fill: var(--ink);
-  font-size: 11px;
-  font-weight: 600;
-  paint-order: stroke;
-  stroke: var(--farm-field-bg);
-  stroke-width: 3px;
-  stroke-linejoin: round;
-}
-.farm-scale path {
-  stroke: var(--ink-2);
-  stroke-width: 1.5;
-}
-.farm-map-svg .farm-scale text,
-.farm-map-svg .farm-north text {
-  fill: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: 10px;
-}
-.farm-north path {
-  fill: var(--ink-2);
-}
-/* drawn small on a phone: bigger labels so they stay about 10px on screen */
-@container farmhero (max-width: 380px) {
-  .farm-map-svg .farm-plot-name {
-    font-size: 13px;
-  }
-  .farm-plot-val {
-    font-size: 11px;
-  }
-}
-
-/* legend under the hero */
-.farm-legend {
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-}
-.farm-sw {
-  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
-}
-.farm-sw.is-stress {
-  background: var(--farm-stress);
-}
-.farm-sw.is-near {
-  background: var(--farm-near);
-}
-.farm-sw.is-ok {
-  background: var(--farm-ok);
-}
-.farm-sw.is-harvested {
-  background: repeating-linear-gradient(
-    0deg,
-    color-mix(in srgb, var(--farm-on-straw) 35%, var(--farm-straw)) 0 1px,
-    var(--farm-straw) 1px 4px
-  );
-}
-.farm-sw.is-cover {
-  background:
-    radial-gradient(circle, color-mix(in srgb, var(--farm-on-cover) 50%, var(--farm-cover)) 0 1.1px, transparent 1.5px) 0 0 / 4px 4px,
-    var(--farm-cover);
-}
-.farm-sw.is-hail {
-  background: var(--surface);
-  border: 2px dashed var(--crit);
-}
-.farm-sw-thorn {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 10px solid var(--crit);
-}
-
-/* -- field tiles ----------------------------------------------------------------------- */
-.farm-fields {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px;
-}
-.farm-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.farm-field.is-hail-risk {
-  border: 2px solid var(--crit);
-  padding: 13px 15px;
-}
-.farm-field.is-stressed {
-  border-color: var(--crit);
-  animation: farm-tile-pulse 1.3s ease-in-out infinite;
-}
-@keyframes farm-tile-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--crit) 0%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--crit) 30%, transparent);
-  }
-}
-.farm-field-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-.farm-field-head h3 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--step-1);
-}
-.farm-field-head h3 a,
-.farm-peer-head h3 a {
-  color: var(--ink);
-  text-decoration: none;
-}
-.farm-field-head h3 a:hover,
-.farm-peer-head h3 a:hover {
-  color: var(--accent);
-  text-decoration: underline;
-}
-.farm-field-head .chip {
-  flex: none;
-}
-.farm-emoji {
-  font-size: 1.1em;
-  line-height: 1;
-}
-.farm-field-crop {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  font-size: var(--step--1);
-  color: var(--ink-2);
-}
-.farm-moist {
-  position: relative;
-  height: 10px;
-  margin: 4px 0 2px;
-  border-radius: 5px;
-  background: var(--surface-2);
-}
-.farm-moist-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 5px;
-  background: var(--farm-ok);
-}
-.farm-moist-fill.is-stress {
-  background: var(--farm-stress);
-}
-.farm-moist-fill.is-near {
-  background: var(--farm-near);
-}
-.farm-moist-fill.is-harvested {
-  background: repeating-linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--farm-on-straw) 35%, var(--farm-straw)) 0 1px,
-    var(--farm-straw) 1px 5px
-  );
-}
-.farm-moist-fill.is-cover {
-  background: var(--farm-cover);
-}
-.farm-moist-tick {
-  position: absolute;
-  top: -4px;
-  bottom: -4px;
-  width: 2px;
-  margin-left: -1px;
-  border-radius: 1px;
-  background: var(--ink);
-}
-.farm-field-moist {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px 10px;
-  font-size: var(--step--1);
-  color: var(--ink-2);
-}
-.farm-field-moist b {
-  color: var(--ink);
-}
-.farm-facts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin: 0;
-}
-.farm-facts > div {
-  min-width: 0;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-}
-.farm-facts dt {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--ink-2);
-}
-.farm-facts dd {
-  margin: 0;
-  font-size: var(--step--1);
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-.farm-field-harvest {
-  font-size: var(--step--1);
-  color: var(--ink-2);
-}
-.farm-field-harvest b {
-  color: var(--ink);
-}
-.farm-field-risk {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--crit-soft);
-  color: var(--crit);
-  font-size: var(--step--1);
-  font-weight: 600;
-}
-.farm-field-risk .farm-ic {
-  margin-top: 2px;
-}
-.farm-remembers {
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--warn-soft);
-  font-size: var(--step--1);
-}
-.farm-field-open {
-  align-self: flex-start;
-  margin-top: auto;
-  padding-inline: 8px;
-}
-
-/* -- farms strip ----------------------------------------------------------------------- */
-.farm-peers {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
-}
-.farm-peer {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.farm-peer.is-warn {
-  border-color: color-mix(in srgb, var(--warn) 55%, var(--line));
-}
-.farm-peer.is-crit {
-  border-color: color-mix(in srgb, var(--crit) 55%, var(--line));
-}
-.farm-peer-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.farm-peer-head h3 {
-  font-size: var(--step-1);
-}
-.farm-peer-crops {
-  font-size: var(--step--1);
-  color: var(--ink-2);
-}
-.farm-peer-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px 8px;
-  font-size: 0.75rem;
-}
-
-/* -- plan card ------------------------------------------------------------------------- */
-.farm-plan {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-  container: farmplan / inline-size;
-}
-.farm-plan h3:focus:not(:focus-visible) {
+/* =====================================================================================
+   The plan card (top of the rail)
+   ===================================================================================== */
+#farm-plan-title:focus {
   outline: none;
 }
-.farm-plan h4,
-.farm-subhead {
-  margin: 0 0 4px;
-  font-family: var(--font-display);
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-3);
-}
-.farm-delta-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.farm-delta {
+.farm-plan-body {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 6px;
-  margin: 0;
+  gap: 10px;
 }
-.farm-delta > div {
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
+.farm-sheet-close {
+  display: none;
 }
-.farm-delta > div.is-used {
-  box-shadow: inset 3px 0 0 var(--accent);
-}
-.farm-delta dt {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--ink-2);
-}
-.farm-delta dd {
-  margin: 0;
-  font-size: var(--step--1);
-}
-
-/* plan table: a real table when the card is wide, one stacked block per action when narrow */
-.farm-plan-table-wrap {
-  min-width: 0;
-  overflow-x: auto;
-}
-.farm-plan-table th[scope="row"] {
-  font-family: var(--font-body);
-  font-size: var(--step--1);
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--ink);
-  padding: 7px 8px;
-  vertical-align: top;
-}
-.farm-plan-table tr.is-ring {
-  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
-}
-.farm-pt-crop {
-  white-space: nowrap;
-}
-.farm-pt-what {
-  font-weight: 600;
-}
-.farm-pt-what .chip {
-  font-weight: 600;
-  vertical-align: 1px;
-}
-.farm-pt-res,
-.farm-pt-reason {
-  color: var(--ink-2);
-}
-.farm-pt-reason {
-  min-width: 14em;
-}
-@container farmplan (max-width: 560px) {
-  .farm-plan-table,
-  .farm-plan-table tbody {
-    display: block;
-  }
-  .farm-plan-table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-  .farm-plan-table tbody {
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-  }
-  .farm-plan-table tr {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas:
-      "field crop conf"
-      "what what what"
-      "res res res"
-      "reason reason reason";
-    align-items: center;
-    gap: 2px 8px;
-    padding: 7px 8px;
-    border-top: 1px solid var(--line);
-  }
-  .farm-plan-table tr:first-child {
-    border-top: 0;
-  }
-  .farm-plan-table th[scope="row"],
-  .farm-plan-table td {
-    display: block;
-    min-width: 0;
-    padding: 0;
-    border: 0;
-  }
-  .farm-pt-field {
-    grid-area: field;
-  }
-  .farm-pt-crop {
-    grid-area: crop;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--ink-2);
-  }
-  .farm-pt-conf {
-    grid-area: conf;
-  }
-  .farm-pt-what {
-    grid-area: what;
-    overflow-wrap: anywhere;
-  }
-  .farm-pt-res {
-    grid-area: res;
-    font-size: 0.75rem;
-  }
-  .farm-pt-res::before {
-    content: attr(data-label) ": ";
-    font-weight: 600;
-    color: var(--ink-3);
-  }
-  .farm-pt-reason {
-    grid-area: reason;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-}
-
-.farm-conf {
-  font-size: var(--step--1);
-}
-.farm-summary {
-  font-size: var(--step--1);
-  color: var(--ink-2);
-}
-.farm-summary .actor {
-  font-weight: 600;
-  color: var(--ink);
-}
-.farm-blocked ul,
-.farm-help ul,
-.farm-history,
-.farm-reports,
-.farm-bubbles {
+.farm-pa-list {
   list-style: none;
   margin: 0;
   padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+.farm-pa {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 13.5px;
+}
+.farm-pa + .farm-pa {
+  border-top: 1px solid var(--line);
+}
+.farm-pa.is-ring {
+  background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface));
+}
+.farm-pa-n {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+.farm-pa-top {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  overflow-wrap: anywhere;
+}
+.farm-pa-top b {
+  font-weight: 650;
+  color: var(--ink);
+}
+.farm-pa-where {
+  color: var(--ink-2);
+}
+.farm-pa-tag {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.farm-pa-sub {
+  margin-top: 1px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+/* What the field agent took on board: a fitted permit, the farm manager's last reason. */
+.farm-pa-note,
+.farm-why li p.farm-why-note {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--brand);
+}
+.farm-safety,
+.farm-review {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--good);
+}
+.farm-safety .farm-ic,
+.farm-review .farm-ic {
+  margin-top: 2px;
+}
+.farm-safety.is-blocked {
+  color: var(--crit);
+}
+.farm-review {
+  color: var(--warn);
+}
+.farm-blocked {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
   gap: 6px;
 }
 .farm-blocked li {
   display: flex;
   gap: 6px;
   padding: 6px 8px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: var(--crit-soft);
   border-left: 3px solid var(--crit);
-  font-size: var(--step--1);
+  font-size: 13px;
 }
 .farm-blocked .farm-ic {
   margin-top: 2px;
@@ -1103,100 +737,279 @@
 .farm-rule {
   color: var(--ink-2);
 }
-.farm-help ul {
-  margin-top: 6px;
+.farm-delta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 6px;
+  margin: 0;
 }
-.farm-help li {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  font-size: var(--step--1);
+.farm-delta > div {
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--line);
 }
-.farm-help-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2px 10px;
+.farm-delta dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
 }
-.farm-help-top .farm-ic {
-  margin-right: 6px;
+.farm-delta dd {
+  margin: 0;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.farm-delta-none {
+  font-size: 12.5px;
+  color: var(--ink-3);
 }
 .farm-decide {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
 }
-.farm-plan-error {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  max-width: none;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--crit-soft);
-  border-left: 3px solid var(--crit);
-  font-size: var(--step--1);
-}
-.farm-plan-error .farm-ic {
-  margin-top: 2px;
+.farm-approve {
+  width: 100%;
+  min-height: 40px;
+  font-size: 14px;
 }
 .farm-reject {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 6px 8px;
+  gap: 4px 8px;
   align-items: center;
 }
-.farm-reject .farm-label {
+.farm-label {
   grid-column: 1 / -1;
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 600;
   color: var(--ink-2);
 }
 .farm-reject .input {
-  grid-column: 1;
+  grid-column: 1 / -1;
 }
 .farm-reject [hidden] {
   display: none;
 }
-.farm-reject .btn-danger {
-  grid-column: 2;
-  grid-row: 2;
+.farm-plan-error {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--crit-soft);
+  border-left: 3px solid var(--crit);
+  font-size: 13px;
+  color: var(--ink);
+}
+.farm-plan-error .farm-ic {
+  margin-top: 2px;
+}
+.farm-told {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.farm-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
 }
 .farm-history li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 8px;
-  font-size: var(--step--1);
 }
 .farm-history-reason {
   flex-basis: 100%;
   color: var(--ink-2);
 }
 
-/* -- team conversation ------------------------------------------------------------------ */
+/* the "Plan waiting" bar and the bottom sheet: phones only */
+.farm-sheetbar,
+.farm-sheet-backdrop {
+  display: none;
+}
+@media (max-width: 720px) {
+  .farm-pg.has-sheet {
+    padding-bottom: 72px;
+  }
+  .farm-sheetbar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 10px 16px;
+    border: 1px solid var(--brand);
+    border-radius: var(--r);
+    background: var(--brand);
+    color: var(--accent-ink);
+    box-shadow: var(--shadow-pop);
+    font-size: 15px;
+    font-weight: 650;
+    text-align: left;
+    cursor: pointer;
+  }
+  .farm-sheetbar-text {
+    flex: 1;
+  }
+  .farm-sheetbar-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--warn-mark);
+    box-shadow: 0 0 0 2px var(--accent-ink);
+  }
+  .farm-sheetbar-go {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .farm-plan.is-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 31;
+    max-height: 86vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 14px 14px 0 0;
+    box-shadow: var(--shadow-pop);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition:
+      transform 220ms ease,
+      visibility 0s linear 220ms;
+  }
+  .farm-pg.is-sheet-open .farm-plan.is-sheet {
+    transform: none;
+    visibility: visible;
+    transition: transform 220ms ease;
+  }
+  .farm-plan.is-sheet .pane-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface);
+  }
+  .farm-plan.is-sheet .farm-sheet-close {
+    display: inline-flex;
+  }
+  .farm-pg.is-sheet-open .farm-sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 29;
+    background: color-mix(in srgb, var(--ink) 35%, transparent);
+  }
+}
+
+/* =====================================================================================
+   Folded panes: why this plan, team log, what buyers & neighbours see
+   ===================================================================================== */
+.farm-fold > summary {
+  cursor: pointer;
+  list-style: none;
+  border-bottom: 0;
+}
+.farm-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.farm-fold[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+.farm-fold > summary:hover h2 {
+  color: var(--brand);
+}
+.farm-fold > summary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+  border-radius: var(--r);
+}
+.farm-fold-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.farm-fold-chev {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--ink-3);
+  border-bottom: 2px solid var(--ink-3);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 150ms ease;
+}
+.farm-fold[open] .farm-fold-chev {
+  transform: rotate(225deg) translate(-2px, 0);
+}
+.farm-why {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 13.5px;
+}
+.farm-why li {
+  padding-left: 10px;
+  border-left: 3px solid var(--line-2);
+}
+.farm-why-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+}
+.farm-why li p {
+  margin-top: 2px;
+  color: var(--ink-2);
+}
+.farm-why-sum {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.farm-why-sum .actor {
+  font-weight: 600;
+  color: var(--ink);
+}
+.farm-why-offers {
+  margin-top: 12px;
+}
+.farm-why-offers ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
 .farm-scroll {
   max-height: 440px;
   overflow-y: auto;
-  margin-top: 8px;
   padding-right: 4px;
   overscroll-behavior: contain;
 }
 .farm-scroll-short {
-  max-height: 340px;
+  max-height: 360px;
 }
-.farm-log {
+.farm-log,
+.farm-log-list,
+.farm-bubbles,
+.farm-sw-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
+}
+.farm-log {
+  display: grid;
   gap: 6px;
 }
 .farm-log-date {
@@ -1207,16 +1020,21 @@
   padding: 2px 0;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--ink-3);
 }
 .farm-log-list li {
+  display: grid;
   grid-template-columns: 14px minmax(0, 1fr);
   gap: 8px;
-  padding-inline: 6px;
+  padding: 6px;
+  border-bottom: 1px solid var(--line);
   border-radius: 4px;
+  font-size: 13px;
+}
+.farm-log-list li:last-child {
+  border-bottom: 0;
 }
 .farm-log-list li > .farm-ic {
   margin-top: 3px;
@@ -1227,32 +1045,32 @@
 }
 .farm-log-list .actor {
   margin-right: 4px;
+  font-weight: 600;
 }
 .farm-log-warn {
   box-shadow: inset 3px 0 0 var(--warn);
   background: color-mix(in srgb, var(--warn-soft) 60%, transparent);
 }
-.farm-log-block {
-  box-shadow: inset 3px 0 0 var(--crit);
-  background: var(--crit-soft);
-}
-.farm-log-approved {
-  box-shadow: inset 3px 0 0 var(--ok);
-  background: var(--ok-soft);
-}
+.farm-log-block,
 .farm-log-rejected {
   box-shadow: inset 3px 0 0 var(--crit);
   background: var(--crit-soft);
 }
-
-/* -- what buyers & neighbours see ---------------------------------------------------------- */
+.farm-log-approved {
+  box-shadow: inset 3px 0 0 var(--good);
+  background: var(--good-soft);
+}
+.farm-bubbles {
+  display: grid;
+  gap: 6px;
+}
 .farm-bubbles li {
-  align-self: flex-start;
+  justify-self: start;
   max-width: 100%;
   padding: 8px 12px;
   border-radius: 14px 14px 14px 4px;
-  background: var(--accent-soft);
-  font-size: var(--step--1);
+  background: var(--brand-soft);
+  font-size: 13px;
 }
 .farm-bubble-head {
   display: flex;
@@ -1261,43 +1079,57 @@
   gap: 2px 8px;
   margin-bottom: 2px;
 }
-.farm-bubble-head .chip {
-  background: var(--surface);
+.farm-aud {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--brand);
 }
 .farm-bubble-head time {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 11.5px;
   color: var(--ink-2);
 }
 
-/* -- neighbour farm ------------------------------------------------------------------------- */
-.farm-tiles {
+/* =====================================================================================
+   Rail: shared with me / shared by me
+   ===================================================================================== */
+.farm-sw-list li {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 12px;
+  gap: 3px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
 }
-.farm-tile {
+.farm-sw-list li:last-child {
+  border-bottom: 0;
+}
+.farm-sw-top {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.farm-tile .chip {
-  align-self: flex-start;
-}
-.farm-tile .stat-value.farm-tile-crops {
-  font-size: var(--step-1);
-}
-.farm-chart-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.farm-chart-head {
-  display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 6px 16px;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.farm-sw-top a {
+  font-size: 13px;
+  font-weight: 600;
+}
+.farm-sw-what {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.farm-sw-why {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+/* =====================================================================================
+   Neighbour farm: silo space and combine, day by day
+   ===================================================================================== */
+.farm-chart-card {
+  display: grid;
+  gap: 8px;
 }
 .farm-key {
   display: inline-block;
@@ -1306,9 +1138,6 @@
   border-top: 2px solid var(--farm-grain);
   border-radius: 1px;
 }
-.farm-key.is-soil {
-  border-top-color: var(--farm-water);
-}
 .farm-dot-key {
   display: inline-block;
   width: 9px;
@@ -1316,7 +1145,7 @@
   border-radius: 50%;
 }
 .farm-dot-key.is-free {
-  background: var(--ok);
+  background: var(--good);
 }
 .farm-dot-key.is-busy {
   border: 1.5px solid var(--ink-3);
@@ -1331,12 +1160,12 @@
 }
 .farm-chart text {
   fill: var(--ink-3);
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 .farm-chart .farm-chart-title {
   fill: var(--ink-2);
-  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
 }
@@ -1353,7 +1182,7 @@
   stroke-dasharray: 4 4;
 }
 .farm-combine-row circle.is-free {
-  fill: var(--ok);
+  fill: var(--good);
 }
 .farm-combine-row circle.is-busy {
   fill: var(--surface);
@@ -1390,61 +1219,12 @@
 .farm-series.is-silo circle {
   fill: var(--farm-grain);
 }
-.farm-series.is-soil polyline {
-  stroke: var(--farm-water);
-}
-.farm-series.is-soil circle {
-  fill: var(--farm-water);
-}
 .farm-table-toggle {
-  align-self: flex-start;
+  justify-self: start;
 }
 .farm-history-table {
   max-height: 260px;
   overflow-y: auto;
-}
-.farm-history-table td.num,
-.farm-history-table th.num {
-  text-align: right;
-}
-.farm-reports {
-  margin-top: 8px;
-}
-.farm-reports li {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
-  font-size: var(--step--1);
-}
-.farm-reports li:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-.farm-report-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.farm-latest {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-}
-.farm-note {
-  max-width: none;
-}
-
-@media (max-width: 640px) {
-  .farm-field-head h3,
-  .farm-peer-head h3 {
-    font-size: var(--step-0);
-  }
-  .farm-wx-temp {
-    font-size: var(--step-1);
-  }
 }
 
 /* Reduced motion: no pulsing, shaking or travelling grain; the states stay visible standing still. */
@@ -1460,9 +1240,5 @@
   .farm-drop,
   .farm-mist {
     animation: none;
-  }
-  .farm-field.is-stressed {
-    animation: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--crit) 30%, transparent);
   }
 }

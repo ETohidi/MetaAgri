@@ -1,32 +1,7 @@
-/* Level 5: one field of our own farm. The soil-moisture chart and the field agent's census
-   on the stage; the crop's numbers, the field map, plans and farm-manager feedback in the
-   panel. Class prefix fd- = field detail. */
-
-/* -- heading ------------------------------------------------------------------- */
-.fd-title {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  min-width: 0;
-}
-.fd-emoji {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  font-size: 2rem;
-  line-height: 1;
-}
-.fd-title p {
-  margin-top: 2px;
-}
-.fd-facts {
-  font-weight: 600;
-  color: var(--ink);
-}
+/* Field level (src/ui/field.js): the field switcher, the soil-moisture chart with its hover
+   layer and daily table, the field agent's raw inputs, and the rail's map, plans and quotes.
+   The page anatomy it shares with every level lives in page.css. Class prefix fd- (field
+   detail). Tokens only, so both themes work. */
 
 /* -- field switcher ------------------------------------------------------------- */
 .fd-tabs {
@@ -35,9 +10,8 @@
   gap: 4px;
   width: fit-content;
   max-width: 100%;
-  margin: 0 0 var(--gap);
   padding: 4px;
-  border-radius: var(--radius);
+  border-radius: var(--r);
   background: var(--surface-2);
 }
 .fd-tab {
@@ -46,7 +20,7 @@
   gap: 8px;
   min-height: 36px;
   padding: 4px 14px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   color: var(--ink-2);
   text-decoration: none;
   font-weight: 600;
@@ -61,12 +35,12 @@
   box-shadow: var(--shadow);
 }
 .fd-tab-name {
-  font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 14px;
 }
 .fd-tab-meta {
-  font-size: 0.75rem;
+  font-size: 12px;
   color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
 }
 .fd-tab-dot {
   width: 10px;
@@ -75,28 +49,21 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 25%, transparent);
 }
 
-/* -- stage cards ------------------------------------------------------------------ */
-.fd-stage {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-}
-.fd-card-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px 16px;
-}
-.fd-card-head p {
-  margin-top: 2px;
-  font-size: var(--step--1);
+/* -- chart pane ------------------------------------------------------------------ */
+.fd-legend {
+  gap: 6px 14px;
 }
 .fd-key {
   display: inline-block;
 }
-.fd-swatch-soft {
+.fd-sw-rain {
+  background: var(--rain);
+}
+.fd-sw-rain.is-soft {
   opacity: 0.4;
+}
+.fd-sw-irrigation {
+  background: var(--irrigation);
 }
 .fd-chart-box {
   margin-top: 10px;
@@ -108,14 +75,14 @@
   overflow: visible;
 }
 .fd-chart text {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   fill: var(--ink-3);
 }
 .fd-chart .fd-value {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   fill: var(--ink);
 }
 .fd-chart .fd-value-soft {
@@ -126,9 +93,9 @@
 }
 .fd-chart .fd-stress {
   fill: var(--crit);
-  font-weight: 500;
+  font-weight: 600;
 }
-/* a halo in the card colour keeps direct labels legible where they cross a line or a bar */
+/* a halo in the pane colour keeps direct labels legible where they cross a line or a bar */
 .fd-chart .fd-value,
 .fd-chart .fd-now,
 .fd-chart .fd-stress {
@@ -164,10 +131,22 @@
 }
 .fd-chart .fd-tip-time {
   fill: var(--ink);
-  font-weight: 500;
+  font-weight: 600;
 }
 .fd-chart .fd-tip-text {
   fill: var(--ink-2);
+}
+
+/* "crop water use": a glossary tip */
+.fd-gloss {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+}
+.fd-gloss:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .fd-days {
@@ -175,7 +154,7 @@
 }
 .fd-toggle {
   padding-inline: 8px;
-  color: var(--accent);
+  color: var(--brand);
 }
 .fd-row-ahead td {
   color: var(--ink-2);
@@ -187,96 +166,40 @@
   overflow: auto;
   margin-top: 6px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
 }
-.fd-scroll .table th {
+.fd-scroll table.t th {
   position: sticky;
   top: 0;
   z-index: 1;
   background: var(--surface);
 }
 .fd-scroll:focus-visible,
-.fd-census:focus-visible {
-  outline: 2px solid var(--accent);
+.fd-inputs:focus-visible {
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 
-/* the field agent's census, pretty-printed */
-.fd-census {
+/* the field agent's inputs, pretty-printed */
+.fd-inputs {
   margin: 6px 0 0;
   max-height: 420px;
   overflow: auto;
   padding: 12px 14px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: var(--surface-2);
   color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-family: var(--mono);
+  font-size: 12px;
   line-height: 1.5;
   white-space: pre;
   tab-size: 2;
 }
 
-/* -- panel ------------------------------------------------------------------------ */
-.fd-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 12px;
-}
-.fd-stats .stat-value {
-  font-variant-numeric: normal;
-}
-.fd-stat-sub {
-  font-size: 0.75rem;
-  color: var(--ink-3);
-}
-.fd-stat-sub .chip {
-  margin-top: 2px;
-}
-
-/* soil moisture against the stress line: a bar with a tick where the crop starts to suffer */
-.fd-moist {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 14px 0 12px;
-  font-size: 0.75rem;
-}
-.fd-moist-track {
-  position: relative;
-  height: 10px;
-  border-radius: 5px;
-  background: var(--surface-2);
-}
-.fd-moist-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 5px;
-  background: var(--ok);
-}
-.fd-moist-fill.is-warn {
-  background: var(--warn);
-}
-.fd-moist-fill.is-crit {
-  background: var(--crit);
-}
-.fd-moist-fill.is-done {
-  background: var(--ink-3);
-}
-.fd-moist-tick {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 2px;
-  margin-left: -1px;
-  border-radius: 1px;
-  background: var(--ink);
-}
-
-/* the field map */
+/* -- rail ------------------------------------------------------------------------ */
 .fd-map-box {
-  margin-top: 10px;
+  min-width: 0;
 }
 .fd-map {
   width: 100%;
@@ -301,18 +224,17 @@
   outline: none;
 }
 .fd-map-field:focus-visible path {
-  stroke: var(--accent);
+  stroke: var(--brand);
   stroke-width: 3;
 }
 .fd-map text {
-  font-family: var(--font-mono);
+  font-family: var(--font);
   font-size: 11px;
   fill: var(--ink-2);
 }
 .fd-map .fd-map-label {
-  font-family: var(--font-display);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
   fill: var(--ink);
   paint-order: stroke;
   stroke: var(--map-land);
@@ -323,55 +245,44 @@
 .fd-map-legend {
   margin-top: 10px;
 }
-
-.fd-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.fd-sw-ok {
+  background: var(--good);
 }
-.fd-list li {
-  padding: 7px 0;
-  border-bottom: 1px solid var(--line);
-  font-size: var(--step--1);
+.fd-sw-warn {
+  background: var(--warn);
 }
-.fd-list li:last-child {
-  border-bottom: 0;
+.fd-sw-crit {
+  background: var(--crit);
 }
-.fd-list li.fd-plan {
+.fd-sw-harvested {
+  background: var(--harvested);
+}
+.fd-sw-cover {
+  background: var(--cover-crop);
+}
+.fd-quotes {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 4px 10px;
-}
-.fd-plan .chip {
-  justify-self: end;
-}
-.fd-plan-conf {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
   gap: 8px;
-  font-size: 0.75rem;
-}
-.fd-note {
-  margin-top: 8px;
-  font-size: var(--step--1);
 }
 .fd-quote {
   margin: 0;
   padding: 2px 0 2px 10px;
-  border-left: 3px solid var(--accent);
-  font-size: var(--step--1);
+  border-left: 3px solid var(--brand);
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 p.fd-quote {
   border-left-color: var(--line);
 }
 .fd-back {
-  align-self: flex-start;
+  justify-self: start;
+}
+.fd-hidden {
+  display: grid;
+  gap: 12px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .fd-tabs {
     width: 100%;
   }
@@ -380,15 +291,10 @@ p.fd-quote {
     justify-content: center;
     padding-inline: 8px;
   }
-  .fd-emoji {
-    width: 44px;
-    height: 44px;
-    font-size: 1.5rem;
-  }
   .fd-scroll {
     max-height: none;
   }
-  .fd-scroll .table th {
+  .fd-scroll table.t th {
     position: static;
   }
 }

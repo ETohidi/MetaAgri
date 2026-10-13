@@ -4,19 +4,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>MetaAgri</title>
-    <meta name="description" content="A multi-level digital twin of a farm in the Oderbruch, from the whole planet down to a single field." />
+    <meta
+      name="description"
+      content="How farm information moves, from the world to a single field: real open statistics above the farm, a simulated fictional farm below."
+    />
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect x='1' y='1' width='24' height='24' rx='5' fill='none' stroke='%232b6650' stroke-width='2'/%3E%3Cpath d='M6 20.5h14' stroke='%232b6650' stroke-width='2' stroke-linecap='round' opacity='.6'/%3E%3Cpath d='M13 20V11.5' stroke='%232b6650' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M13 13.5C13 10 10.6 7.5 6.5 7.5 6.5 11 8.9 13.5 13 13.5Z' fill='%232b6650'/%3E%3Cpath d='M13 11.5C13 8.2 15.3 5.5 19.5 5.5 19.5 8.8 17.2 11.5 13 11.5Z' fill='%232b6650' opacity='.7'/%3E%3C/svg%3E"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap"
-    />
+    <link rel="preload" href="styles/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="styles/base.css" />
-    <link rel="stylesheet" href="styles/maps.css" />
+    <link rel="stylesheet" href="styles/page.css" />
+    <link rel="stylesheet" href="styles/world.css" />
+    <link rel="stylesheet" href="styles/country.css" />
+    <link rel="stylesheet" href="styles/district.css" />
     <link rel="stylesheet" href="styles/farm.css" />
     <link rel="stylesheet" href="styles/field.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -25,31 +26,54 @@
   <body>
     <header class="topbar">
       <div class="topbar-inner">
-        <a class="brand" href="#earth" aria-label="MetaAgri, back to Earth">
+        <a class="brand" href="#germany" aria-label="MetaAgri, home (Germany)">
           <svg viewBox="0 0 26 26" aria-hidden="true">
-            <rect x="1" y="1" width="24" height="24" rx="5" fill="none" stroke="var(--accent)" stroke-width="2" />
-            <path d="M6 20.5h14" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" opacity="0.6" />
-            <path d="M13 20V11.5" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" />
-            <path d="M13 13.5C13 10 10.6 7.5 6.5 7.5 6.5 11 8.9 13.5 13 13.5Z" fill="var(--accent)" />
-            <path d="M13 11.5C13 8.2 15.3 5.5 19.5 5.5 19.5 8.8 17.2 11.5 13 11.5Z" fill="var(--accent)" opacity="0.7" />
+            <rect x="1" y="1" width="24" height="24" rx="5" fill="none" stroke="var(--brand)" stroke-width="2" />
+            <path d="M6 20.5h14" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" opacity="0.6" />
+            <path d="M13 20V11.5" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" />
+            <path d="M13 13.5C13 10 10.6 7.5 6.5 7.5 6.5 11 8.9 13.5 13 13.5Z" fill="var(--brand)" />
+            <path d="M13 11.5C13 8.2 15.3 5.5 19.5 5.5 19.5 8.8 17.2 11.5 13 11.5Z" fill="var(--brand)" opacity="0.7" />
           </svg>
-          MetaAgri
+          <span class="brand-name">MetaAgri</span>
         </a>
-        <nav aria-label="Zoom level" style="display: contents">
+        <nav class="crumbs" aria-label="Where you are">
           <ol class="ladder" id="ladder"></ol>
         </nav>
-        <div class="simbar" id="simbar" role="toolbar" aria-label="Simulation controls"></div>
+        <div class="lens">
+          <button class="role-toggle" id="role-toggle" type="button" aria-expanded="false" aria-controls="rolemenu">
+            Viewing as
+          </button>
+          <div class="rolemenu" id="rolemenu" hidden></div>
+        </div>
+        <button class="btn follow-btn" id="follow" type="button" hidden>Follow the farm manager</button>
+        <button class="sim-toggle" id="sim-toggle" type="button" aria-expanded="false" aria-controls="simdrawer">
+          Simulation
+        </button>
       </div>
-      <div class="statusline" id="statusline"></div>
+      <div class="simdrawer" id="simdrawer" hidden>
+        <div class="simdrawer-inner">
+          <div class="simbar" id="simbar" role="toolbar" aria-label="Simulation controls for the fictional farms"></div>
+          <div class="statusline" id="statusline"></div>
+          <div class="about">
+            <button class="btn btn-ghost about-toggle" id="about-toggle" type="button" aria-expanded="false" aria-controls="about">
+              About this demo
+            </button>
+            <div class="about-pop" id="about" hidden></div>
+          </div>
+        </div>
+      </div>
+      <div class="scenario-strip" id="scenario" hidden></div>
     </header>
 
     <main class="page" id="view" tabindex="-1"></main>
 
     <footer class="footer">
       <p>
-        MetaAgri MVP. Every farm, field, crop and number here is simulated; farm names are fictional. Map data:
-        Natural Earth (public domain), German states from deutschlandGeoJSON (Unlicense); the Oder river and Oderbruch
-        outline simplified by hand.
+        MetaAgri, a non-commercial demo. Above the farm, real figures come from official open sources and carry their
+        source, date and licence on each page (real figures: see web/data/LICENSES.md). The farms are fictional:
+        simulated numbers appear only for them, at Farm and Field level, always marked Simulated and never mixed with
+        real ones. Map data: Natural Earth (public domain), German states from deutschlandGeoJSON (Unlicense); the Oder
+        river and Oderbruch outline simplified by hand. Font: Inter (SIL OFL).
       </p>
     </footer>
 

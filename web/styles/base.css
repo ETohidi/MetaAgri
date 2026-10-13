@@ -1,39 +1,58 @@
-/* Layout concept: a farm operations console. A sticky top bar carries the zoom ladder
-   (Earth > Germany > Oderbruch > farm > field) and the season clock; below it, a wide
-   stage (map, farm or field) with a narrow side panel that summarises the current level. */
+/* MetaAgri design tokens and shared components (the same anatomy as MetaHospital, in an earthy
+   palette: straw and soil neutrals, a pine-green brand, leaf, ochre and rust for status).
+   One anatomy at every level: app bar (where am I, Viewing as, Simulation drawer) > page head >
+   KPI strip > main column | right rail > levels panel > sources footer. Colours only through
+   these tokens, so the light and the dark theme both work. Inter is self-hosted (SIL OFL,
+   styles/fonts/). */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/inter-latin-wght-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC,
+    U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
-  /* colour: warm straw and soil neutrals, one pine-green accent, field colours for the crops */
-  --bg: #f3f0e6;
+  --page: #f4f1e8;
   --surface: #fffdf8;
-  --surface-2: #ebe6d8;
+  --surface-2: #efeadd;
   --ink: #1f1a12;
   --ink-2: #574c3b;
   --ink-3: #6a5f4e;
-  --line: #dcd4c2;
-  --accent: #2b6650;
-  --accent-soft: #dcebe2;
-  --accent-ink: #ffffff;
+  --line: #e2dbca;
+  --line-2: #cec4ae;
+  --brand: #2b6650;
+  --brand-soft: #dcebe2;
 
-  /* semantic state (soil moisture, silo fill, safety) - separate from the accent:
-     leaf green comfortable, ochre close to the line, rust below it */
-  --ok: #3d7a1f;
-  --ok-soft: #e2efd3;
-  --warn: #a36700;
+  /* sequential (maps, sparklines): one pine hue; more = more contrast against the surface */
+  --seq-1: #d9ebe2;
+  --seq-2: #a8d0bd;
+  --seq-3: #6fae93;
+  --seq-4: #3d8468;
+  --seq-5: #1f5a45;
+
+  /* status: reserved, always paired with a shape and a label (leaf, ochre, rust) */
+  --good: #346a1b;
+  --good-soft: #e2efd3;
+  --warn: #935c00;
   --warn-soft: #f7eacd;
-  /* text on the -soft chips: darker than the fills so 12px labels reach 4.5:1 */
-  --ok-ink: #336619;
-  --warn-ink: #7f5000;
+  --warn-mark: #e0a526;
   --crit: #b0391d;
   --crit-soft: #f8e0d7;
+
+  /* provenance: Live (teal, like water), Estimated (ochre), Simulated (plum); Official uses --brand */
+  --prov-real: #13707f;
+  --prov-est: #7a5a00;
+  --prov-ill: #74418a;
 
   /* field states and water, for charts, maps and the farm view */
   --harvested: #c8b88a;
   --cover-crop: #7fb89a;
   --rain: #3a7cc0;
   --irrigation: #13899b;
-
-  /* right-edge cue on horizontally scrollable tables */
-  --scroll-shade: rgba(31, 26, 18, 0.16);
 
   /* maps: pale water, sandy land, field green for the place in focus */
   --map-water: #c9dce3;
@@ -42,88 +61,121 @@
   --map-active: #a9c97f;
   --map-muted: #ebe6d6;
 
-  /* type */
-  --font-display: "Barlow Semi Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "Public Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --scroll-shade: rgba(31, 26, 18, 0.16);
+  --r: 10px;
+  --r-sm: 6px;
+  --shadow: 0 1px 2px rgba(31, 26, 18, 0.06);
+  --shadow-pop: 0 8px 28px rgba(31, 26, 18, 0.16), 0 1px 3px rgba(31, 26, 18, 0.08);
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --accent-ink: #ffffff;
+
+  /* legacy names still used by the farm and field views: aliases of the tokens above */
+  --bg: var(--page);
+  --accent: var(--brand);
+  --accent-soft: var(--brand-soft);
+  --ok: var(--good);
+  --ok-soft: var(--good-soft);
+  --ok-ink: var(--good);
+  --warn-ink: var(--warn);
+  --radius: var(--r);
+  --radius-sm: var(--r-sm);
+  /* one typeface; numbers use Inter's tabular figures, so the old mono and display names map to it */
+  --font-display: var(--font);
+  --font-body: var(--font);
+  --font-mono: var(--font);
   --step--1: 0.8125rem;
   --step-0: 0.9375rem;
   --step-1: 1.125rem;
   --step-2: 1.5rem;
   --step-3: 2rem;
-
-  /* shape */
-  --radius: 10px;
-  --radius-sm: 6px;
   --gap: 16px;
   --panel-w: 380px;
-  --shadow: 0 1px 2px rgba(31, 26, 18, 0.06), 0 4px 16px rgba(31, 26, 18, 0.06);
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #12110c;
+    --page: #12110c;
     --surface: #1b1a13;
     --surface-2: #27251c;
     --ink: #ede8da;
     --ink-2: #b8af9a;
     --ink-3: #9a917c;
     --line: #363228;
-    --accent: #6fc3a2;
-    --accent-soft: #173229;
-    --accent-ink: #0b1712;
-    --ok: #8fcb5c;
-    --ok-soft: #1e3014;
+    --line-2: #4b4637;
+    --brand: #6fc3a2;
+    --brand-soft: #173229;
+    --seq-1: #17302a;
+    --seq-2: #1f4a3c;
+    --seq-3: #2f6e57;
+    --seq-4: #5fae8f;
+    --seq-5: #a3dcc4;
+    --good: #8fcb5c;
+    --good-soft: #1e3014;
     --warn: #e5b04a;
     --warn-soft: #362810;
-    --ok-ink: var(--ok);
-    --warn-ink: var(--warn);
+    --warn-mark: #e5b04a;
     --crit: #ef7a5c;
     --crit-soft: #3b1a12;
+    --prov-real: #45c4d4;
+    --prov-est: #d8b04a;
+    --prov-ill: #c79be0;
     --harvested: #a8986a;
     --cover-crop: #5fae94;
     --rain: #6aa8e6;
     --irrigation: #45c4d4;
-    --scroll-shade: rgba(0, 0, 0, 0.55);
     --map-water: #0f1b21;
     --map-land: #2c2a21;
     --map-line: #12110c;
     --map-active: #43642d;
     --map-muted: #211f18;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+    --scroll-shade: rgba(0, 0, 0, 0.55);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --accent-ink: #0b1712;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #12110c;
+  --page: #12110c;
   --surface: #1b1a13;
   --surface-2: #27251c;
   --ink: #ede8da;
   --ink-2: #b8af9a;
   --ink-3: #9a917c;
   --line: #363228;
-  --accent: #6fc3a2;
-  --accent-soft: #173229;
-  --accent-ink: #0b1712;
-  --ok: #8fcb5c;
-  --ok-soft: #1e3014;
+  --line-2: #4b4637;
+  --brand: #6fc3a2;
+  --brand-soft: #173229;
+  --seq-1: #17302a;
+  --seq-2: #1f4a3c;
+  --seq-3: #2f6e57;
+  --seq-4: #5fae8f;
+  --seq-5: #a3dcc4;
+  --good: #8fcb5c;
+  --good-soft: #1e3014;
   --warn: #e5b04a;
   --warn-soft: #362810;
-  --ok-ink: var(--ok);
-  --warn-ink: var(--warn);
+  --warn-mark: #e5b04a;
   --crit: #ef7a5c;
   --crit-soft: #3b1a12;
+  --prov-real: #45c4d4;
+  --prov-est: #d8b04a;
+  --prov-ill: #c79be0;
   --harvested: #a8986a;
   --cover-crop: #5fae94;
   --rain: #6aa8e6;
   --irrigation: #45c4d4;
-  --scroll-shade: rgba(0, 0, 0, 0.55);
   --map-water: #0f1b21;
   --map-land: #2c2a21;
   --map-line: #12110c;
   --map-active: #43642d;
   --map-muted: #211f18;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+  --scroll-shade: rgba(0, 0, 0, 0.55);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --accent-ink: #0b1712;
   color-scheme: dark;
 }
 
@@ -137,41 +189,46 @@ html,
 body {
   min-height: 100%;
 }
+/* Anything scrolled into view lands below the sticky app bar (--sticky-h is set by main.js). */
+html {
+  scroll-padding-top: calc(var(--sticky-h, 0px) + 12px);
+}
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--page);
   color: var(--ink);
-  font-family: var(--font-body);
-  font-size: var(--step-0);
-  line-height: 1.5;
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
 }
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.15;
+  font-weight: 650;
+  line-height: 1.2;
   margin: 0;
   text-wrap: balance;
-  letter-spacing: 0.005em;
+  letter-spacing: -0.01em;
 }
 h1 {
-  font-size: var(--step-3);
+  font-size: 26px;
+  font-weight: 700;
 }
 h2 {
-  font-size: var(--step-2);
+  font-size: 18px;
 }
 h3 {
-  font-size: var(--step-1);
+  font-size: 15px;
 }
 p {
   margin: 0;
-  max-width: 65ch;
+  max-width: 70ch;
 }
 a {
-  color: var(--accent);
+  color: var(--brand);
 }
 button,
 input,
@@ -181,7 +238,7 @@ textarea {
   color: inherit;
 }
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 svg {
@@ -208,94 +265,341 @@ svg {
   border: 0;
 }
 
-/* -- shell ----------------------------------------------------------------- */
+/* -- app bar: logo, breadcrumb of places (level name under each), Viewing as, Simulation ---- */
 .topbar {
   position: sticky;
-  /* --topbar-stick (main.js) is negative on phones, so only the simulation strip stays */
-  top: calc(env(safe-area-inset-top, 0px) + var(--topbar-stick, 0px));
+  top: env(safe-area-inset-top, 0px);
   z-index: 20;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(8px);
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 .topbar-inner {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 12px 16px;
-  padding: 10px 20px;
-  max-width: 1480px;
+  gap: 12px;
+  height: 56px;
+  padding: 0 24px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex: none;
   text-decoration: none;
   color: var(--ink);
-  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.25rem;
-  letter-spacing: 0.01em;
+  font-size: 15px;
+  white-space: nowrap;
 }
 .brand svg {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
+}
+.crumbs {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.crumbs::-webkit-scrollbar {
+  display: none;
 }
 .ladder {
   display: flex;
-  flex-wrap: wrap;
-  align-items: stretch;
+  align-items: center;
   gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
-  flex: 1 1 420px;
-  min-width: 0;
+  width: max-content;
 }
 .ladder li {
   display: flex;
   align-items: center;
 }
 .ladder li + li::before {
-  content: "›";
-  color: var(--ink-3);
-  padding: 0 4px;
+  content: "/";
+  color: var(--line-2);
+  padding: 0 1px;
 }
 .ladder a,
 .ladder span.step {
   display: flex;
   flex-direction: column;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
+  align-items: flex-start;
+  padding: 4px 7px;
+  border-radius: var(--r-sm);
   text-decoration: none;
   color: var(--ink-2);
+  white-space: nowrap;
   line-height: 1.2;
+}
+.ladder .step-name {
+  font-size: 13.5px;
+  font-weight: 550;
+}
+.ladder .step-scale {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-weight: 500;
 }
 .ladder a:hover {
   background: var(--surface-2);
   color: var(--ink);
 }
-.ladder .step-name {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1rem;
-}
-.ladder .step-scale {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-}
 .ladder [aria-current="page"] {
-  background: var(--accent-soft);
+  background: var(--brand-soft);
   color: var(--ink);
 }
-.ladder [aria-current="page"] .step-scale {
-  color: var(--accent);
+.ladder [aria-current="page"] .step-name {
+  font-weight: 650;
 }
-.ladder span.step.is-pending {
-  opacity: 0.55;
+.ladder [aria-current="page"] .step-scale {
+  color: var(--brand);
+  font-weight: 600;
+}
+.ladder span.step.is-pending,
+.ladder span.step.is-soon {
+  color: var(--ink-3);
+}
+.ladder span.step.is-soon .step-name {
+  font-weight: 450;
+}
+.ladder span.step.is-soon {
+  cursor: help;
+}
+
+/* "Viewing as": a lens, not a login */
+.lens {
+  position: relative;
+  flex: none;
+}
+.role-toggle,
+.sim-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 3px 12px 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.role-toggle:hover,
+.sim-toggle:hover {
+  border-color: var(--line-2);
+  background: var(--surface-2);
+}
+.role-toggle[aria-expanded="true"],
+.sim-toggle[aria-expanded="true"] {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+.role-toggle svg {
+  width: 16px;
+  height: 16px;
+  color: var(--brand);
+}
+.role-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+.role-pre {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+.role-short {
+  display: none;
+}
+.rolemenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 40;
+  width: 340px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-pop);
+}
+.rolemenu[hidden] {
+  display: none;
+}
+.rolemenu-h {
+  padding: 4px 8px 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.rolemenu-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.role-opt {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  width: 100%;
+  padding: 8px 10px 8px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.role-opt::before {
+  content: "";
+  grid-row: 1 / span 3;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+  border: 1.5px solid var(--line-2);
+  border-radius: 50%;
+}
+.role-opt:hover {
+  background: var(--surface-2);
+}
+.role-opt[aria-current="true"] {
+  background: var(--brand-soft);
+  border-color: color-mix(in srgb, var(--brand) 35%, transparent);
+}
+.role-opt[aria-current="true"]::before {
+  border-color: var(--brand);
+  background: var(--brand);
+  box-shadow: inset 0 0 0 2px var(--surface);
+}
+.role-opt-name {
+  grid-column: 2;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.role-opt-ex {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.role-opt-home {
+  grid-column: 2;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.role-follow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  text-align: left;
+  cursor: pointer;
+}
+.role-follow:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+.role-follow:disabled {
+  cursor: default;
+}
+.role-follow svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--brand);
+}
+.role-follow b {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.role-follow small {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.rolemenu-note {
+  margin-top: 8px;
+  padding: 0 6px 4px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.follow-btn {
+  flex: none;
+  color: var(--brand);
+  border-color: color-mix(in srgb, var(--brand) 45%, var(--line));
+  border-radius: 999px;
+}
+.follow-btn:hover:not(:disabled) {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.follow-btn[hidden] {
+  display: none;
+}
+
+/* Simulation toggle and drawer */
+.sim-toggle svg {
+  width: 16px;
+  height: 16px;
+  color: var(--prov-ill);
+}
+.sim-toggle .sim-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.sim-toggle .sim-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--crit);
+}
+.sim-chev {
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--ink-3);
+  border-bottom: 1.5px solid var(--ink-3);
+  transform: translateY(-2px) rotate(45deg);
+}
+[aria-expanded="true"] > .sim-chev {
+  transform: translateY(2px) rotate(-135deg);
+}
+.simdrawer {
+  border-top: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.simdrawer[hidden] {
+  display: none;
+}
+.simdrawer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 10px 24px;
 }
 .simbar {
   display: flex;
@@ -306,83 +610,151 @@ svg {
 .simbar-buttons {
   display: contents;
 }
-/* Play and Pause take the same room, so toggling autoplay never reflows the header */
+.simbar-sep {
+  width: 1px;
+  height: 22px;
+  margin: 0 2px;
+  background: var(--line-2);
+}
+/* Play and Pause take the same room, so toggling autoplay never reflows the bar */
 #btn-play {
   min-width: 5.5rem;
 }
-@media (min-width: 641px) {
-  /* room for "30 Jul" over "Wednesday", so the buttons don't shift from day to day */
-  .clock {
-    min-width: 5rem;
-  }
+.btn-scenario svg {
+  color: var(--crit);
 }
 .clock {
   display: flex;
   flex-direction: column;
+  min-width: 4.5rem;
   line-height: 1.1;
   padding-right: 6px;
 }
 .clock-time {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 1.25rem;
+  font-weight: 650;
+  font-size: 18px;
   font-variant-numeric: tabular-nums;
 }
 .clock-day {
-  font-size: var(--step--1);
-  color: var(--ink-2);
+  font-size: 12px;
+  color: var(--ink-3);
 }
 .statusline {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  gap: 6px 12px;
   align-items: center;
-  padding: 6px 20px;
-  max-width: 1480px;
-  margin: 0 auto;
-  font-size: var(--step--1);
+  font-size: 12.5px;
   color: var(--ink-2);
 }
-.banner-emergency {
+
+/* "About this demo": real vs synthetic data, the seed, the rule-based agents */
+.about {
+  position: relative;
+  margin-left: auto;
+}
+.about-toggle[aria-expanded="true"] {
+  background: var(--surface);
+  border-color: var(--line);
+}
+.about-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 40;
+  width: min(440px, calc(100vw - 32px));
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-pop);
+}
+.about-pop[hidden] {
+  display: none;
+}
+.about-h {
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+.about-list {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 12px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.about-list dt {
+  padding-top: 1px;
+}
+.about-list dd {
+  margin: 0;
+}
+.about-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+/* Simulated scenarios (heatwave, hail warning): one strip each, on District, Farm and Field */
+.scenario-strip[hidden] {
+  display: none;
+}
+.scenario-strip > div {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
   align-items: center;
+  gap: 4px 12px;
+  padding: 6px max(24px, calc((100% - 1440px) / 2 + 24px));
+  border-top: 1px solid var(--crit);
   background: var(--crit-soft);
   color: var(--crit);
-  border: 1px solid var(--crit);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
   font-weight: 600;
+  font-size: 13px;
 }
-/* a warning rather than an emergency (the hail warning) */
-.banner-emergency.banner-warn {
+.scenario-strip > div.is-warn {
+  border-top-color: var(--warn);
   background: var(--warn-soft);
-  color: var(--warn-ink);
-  border-color: var(--warn);
+  color: var(--warn);
 }
+.scenario-strip a {
+  color: inherit;
+}
+.scenario-strip .prov {
+  margin-right: 4px;
+}
+
 .page {
-  max-width: 1480px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding-inline: 20px;
-  padding-block: 16px 40px;
+  padding: 24px 24px 40px;
 }
+.footer {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 24px 32px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.footer p {
+  max-width: none;
+}
+
+/* the two-column layout the farm and field views still use */
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--panel-w);
-  gap: var(--gap);
+  gap: 20px;
   align-items: start;
 }
-.layout > * {
-  min-width: 0;
-}
+.layout > *,
 .stage {
   min-width: 0;
 }
 .panel {
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
+  gap: 16px;
   min-width: 0;
 }
 .view-head {
@@ -396,82 +768,158 @@ svg {
 .view-head p {
   color: var(--ink-2);
 }
-.footer {
-  max-width: 1480px;
-  margin: 0 auto;
-  padding-inline: 20px;
-  padding-block: 12px 32px;
-  font-size: 0.75rem;
-  color: var(--ink-3);
-}
-.footer p {
-  max-width: none;
-}
-@media (max-width: 980px) {
+@media (max-width: 1180px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
   }
 }
-@media (max-width: 640px) {
-  .topbar-inner,
-  .statusline,
-  .page,
-  .footer {
-    padding-inline: 16px;
-  }
-  .ladder .step-scale {
+/* The bar gives way from the right as it narrows: first the Follow button (it stays in the
+   Viewing as menu), then the "Simulation" word, then the greyed and not-chosen steps. */
+@media (max-width: 1359px) {
+  .topbar .follow-btn {
     display: none;
   }
-  /* Phone header: brand, ladder and status scroll away; the clock and the sim buttons
-     form a compact strip at the bottom of the header, which is all that stays on screen. */
-  .topbar {
-    display: flex;
-    flex-direction: column;
+}
+@media (max-width: 1180px) {
+  .sim-toggle .sim-label,
+  .role-name {
+    display: none;
   }
+  .role-short {
+    display: inline;
+  }
+}
+@media (max-width: 1480px) {
+  .ladder[data-depth="farm"] li.is-soon,
+  .ladder[data-depth="field"] li.is-soon {
+    display: none;
+  }
+}
+/* Tablets and phones: only the nearest place above with a page, and the current place */
+@media (max-width: 1000px) {
+  .ladder li.is-pending,
+  .ladder li.is-soon,
+  .ladder li.is-far {
+    display: none;
+  }
+  .ladder li.is-up::before {
+    content: "‹";
+    color: var(--ink-3);
+    padding: 0 2px 0 0;
+  }
+  .role-pre {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
   .topbar-inner {
-    display: contents;
+    gap: 8px;
+    height: 52px;
+    padding: 0 12px 0 16px;
   }
-  .brand {
-    padding: 8px 16px 0;
-    font-size: 1.125rem;
+  .brand-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* phones: the parent (one tap up) and the current place only; long names shrink with an
+     ellipsis, the parent first, instead of scrolling the current place out of view */
+  .ladder li.is-down {
+    display: none;
   }
   .ladder {
-    flex: none;
-    padding: 4px 12px 0;
+    width: auto;
+    max-width: 100%;
   }
-  .ladder li + li::before {
-    padding: 0 1px;
+  .ladder li {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  .ladder li.is-up {
+    flex-shrink: 4;
   }
   .ladder a,
   .ladder span.step {
-    padding: 3px 6px;
+    min-width: 0;
+    max-width: 100%;
   }
-  .statusline {
-    order: 1;
-    padding-block: 6px;
+  .ladder .step-name,
+  .ladder .step-scale {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .statusline .chip-plain,
-  .statusline .status-seed {
+  .ladder a,
+  .ladder span.step {
+    padding: 4px 6px;
+  }
+  .ladder .step-name {
+    font-size: 13px;
+  }
+  .ladder .step-scale {
+    font-size: 10.5px;
+  }
+  /* the topbar is the containing block: the menu spans the phone's width under the bar */
+  .lens {
+    position: static;
+  }
+  .rolemenu {
+    left: 12px;
+    right: 12px;
+    top: calc(100% + 4px);
+    width: auto;
+  }
+  .role-toggle,
+  .sim-toggle {
+    min-height: 36px;
+    padding: 4px 10px 4px 8px;
+    gap: 6px;
+  }
+  .sim-toggle .sim-day {
     display: none;
   }
-  .simbar {
-    order: 2;
-    gap: 6px;
-    padding: 6px 16px;
-    border-top: 1px solid var(--line);
+  .role-short {
+    font-size: 12.5px;
+  }
+  .simdrawer-inner,
+  .scenario-strip > div {
+    padding-inline: 16px;
   }
   .simbar .btn {
     padding-inline: 9px;
   }
+  .simbar .clock,
+  .scenario-strip .em-long {
+    display: none;
+  }
+  .simdrawer-inner {
+    gap: 8px;
+    padding-block: 8px;
+  }
+  .simbar {
+    gap: 6px;
+  }
   #btn-play {
-    min-width: 4.875rem;
+    min-width: 0;
   }
-  .simbar .clock {
-    padding-right: 2px;
+  .about {
+    margin-left: 0;
+    width: 100%;
   }
-  .simbar .clock-time {
-    font-size: 1.0625rem;
+  .about-pop {
+    position: static;
+    width: auto;
+    margin-top: 8px;
+    box-shadow: none;
   }
+  .scenario-strip > div {
+    padding-block: 4px;
+    font-size: 12.5px;
+  }
+  #btn-play .btn-label,
   #btn-reset .btn-label {
     position: absolute;
     width: 1px;
@@ -480,13 +928,39 @@ svg {
     clip-path: inset(50%);
     white-space: nowrap;
   }
+  .page {
+    padding: 16px 16px 32px;
+  }
+  .footer {
+    padding-inline: 16px;
+  }
+}
+@media (max-width: 720px) {
+  /* An open Simulation drawer (and its About popover) would pin a third or more of a phone
+     screen; while it is open the app bar scrolls away with the page. Closed, the one-row bar
+     stays sticky. */
+  .topbar:has(> .simdrawer:not([hidden])) {
+    position: relative;
+  }
+}
+@media (max-width: 420px) {
+  .topbar-inner {
+    gap: 6px;
+    padding-left: 12px;
+  }
+  .role-toggle .sim-chev,
+  .sim-toggle .sim-chev,
+  .sim-toggle .sim-time {
+    display: none;
+  }
 }
 
 /* -- shared components ---------------------------------------------------- */
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
   padding: 14px 16px;
   min-width: 0;
 }
@@ -499,11 +973,10 @@ svg {
   margin-top: 8px;
 }
 .eyebrow {
-  font-family: var(--font-display);
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--ink-3);
 }
 .muted {
@@ -514,11 +987,7 @@ svg {
 }
 .mono,
 .num {
-  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-}
-.num {
-  font-family: inherit;
 }
 .stack {
   display: flex;
@@ -547,14 +1016,14 @@ svg {
   gap: 2px;
 }
 .stat-value {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: var(--step-2);
+  font-weight: 650;
+  font-size: 22px;
   line-height: 1.1;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 .stat-label {
-  font-size: var(--step--1);
+  font-size: 12.5px;
   color: var(--ink-2);
 }
 .kv {
@@ -562,7 +1031,7 @@ svg {
   grid-template-columns: auto 1fr;
   gap: 4px 12px;
   margin: 0;
-  font-size: var(--step--1);
+  font-size: 13px;
 }
 .kv dt {
   color: var(--ink-2);
@@ -581,12 +1050,12 @@ svg {
   gap: 6px;
   min-height: 34px;
   padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-2);
   background: var(--surface);
   color: var(--ink);
   font-weight: 600;
-  font-size: var(--step--1);
+  font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
@@ -603,8 +1072,8 @@ svg {
   height: 14px;
 }
 .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--brand);
+  border-color: var(--brand);
   color: var(--accent-ink);
 }
 .btn-primary:hover:not(:disabled) {
@@ -618,8 +1087,8 @@ svg {
   border-color: var(--crit);
 }
 .btn-ok {
-  background: var(--ok);
-  border-color: var(--ok);
+  background: var(--good);
+  border-color: var(--good);
   color: var(--surface);
 }
 .btn-ghost {
@@ -627,12 +1096,12 @@ svg {
   border-color: transparent;
 }
 .btn-ghost:hover:not(:disabled) {
-  background: var(--surface-2);
-  border-color: transparent;
+  background: var(--surface);
+  border-color: var(--line);
 }
 .btn[aria-pressed="true"] {
-  background: var(--accent-soft);
-  border-color: var(--accent);
+  background: var(--brand-soft);
+  border-color: var(--brand);
 }
 
 /* form controls */
@@ -640,11 +1109,11 @@ svg {
 .input {
   min-height: 34px;
   padding: 5px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-2);
   background: var(--surface);
   color: var(--ink);
-  font-size: var(--step--1);
+  font-size: 13px;
   width: 100%;
   min-width: 0;
 }
@@ -656,7 +1125,7 @@ svg {
   gap: 5px;
   padding: 1px 8px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.6;
   white-space: nowrap;
@@ -674,20 +1143,124 @@ svg {
   display: none;
 }
 .chip-ok {
-  background: var(--ok-soft);
-  color: var(--ok-ink);
+  background: var(--good-soft);
+  color: var(--good);
 }
 .chip-warn {
   background: var(--warn-soft);
-  color: var(--warn-ink);
+  color: var(--warn);
 }
 .chip-crit {
   background: var(--crit-soft);
   color: var(--crit);
 }
 .chip-accent {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+/* a scenario or warning banner inside a view */
+.banner-emergency {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+  background: var(--crit-soft);
+  color: var(--crit);
+  border: 1px solid var(--crit);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  font-weight: 600;
+}
+.banner-emergency.banner-warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+/* "Not shown": the data exists but this role may not see it, and here is why (ui/roles.js) */
+.notshown {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.notshown .prov {
+  margin-top: 1px;
+}
+.notshown b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* levels panel: the channels that pass through a level (ui/levels.js; the rest is in page.css) */
+.levels-ladder li.is-soon {
+  border-style: dashed;
+  cursor: help;
+}
+.levels-channels {
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--line);
+}
+.levels-channels > h3 {
+  margin-bottom: 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.levels-ch-lead {
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.levels-ch-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.levels-ch-list > li {
+  min-width: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.levels-ch-list h4 {
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0;
+  color: var(--ink);
+}
+.levels-ch-list p {
+  max-width: none;
+}
+.levels-chain {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.levels-chain li + li::before {
+  content: "→";
+  padding: 0 5px;
+}
+.levels-chain.is-two-way li + li::before {
+  content: "↔";
+}
+.levels-chain li.is-here {
+  color: var(--brand);
+  font-weight: 650;
 }
 
 /* utilisation meter */
@@ -702,7 +1275,7 @@ svg {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: 4px;
-  background: var(--ok);
+  background: var(--good);
 }
 .meter.is-warn > span {
   background: var(--warn);
@@ -716,8 +1289,7 @@ svg {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   color: var(--ink-2);
 }
@@ -731,7 +1303,7 @@ svg {
 .conf-fill {
   display: block;
   height: 100%;
-  background: var(--ok);
+  background: var(--good);
 }
 .conf.is-warn .conf-fill {
   background: var(--warn);
@@ -753,17 +1325,14 @@ svg {
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--step--1);
+  font-size: 13px;
 }
 .table th {
   text-align: left;
-  font-family: var(--font-display);
   font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 12px;
   color: var(--ink-3);
-  padding: 6px 8px;
+  padding: 8px;
   border-bottom: 1px solid var(--line);
   white-space: nowrap;
 }
@@ -780,7 +1349,7 @@ svg {
   white-space: nowrap;
 }
 
-/* feed (team conversation, family messages) */
+/* feed (team conversation, notices) */
 .feed {
   list-style: none;
   margin: 0;
@@ -794,13 +1363,12 @@ svg {
   gap: 8px;
   padding: 6px 0;
   border-bottom: 1px solid var(--line);
-  font-size: var(--step--1);
+  font-size: 13px;
 }
 .feed li:last-child {
   border-bottom: 0;
 }
 .feed time {
-  font-family: var(--font-mono);
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -813,7 +1381,7 @@ svg {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 14px;
-  font-size: 0.75rem;
+  font-size: 12px;
   color: var(--ink-2);
 }
 .legend span {
@@ -838,28 +1406,30 @@ svg {
   flex-direction: column;
   gap: 8px;
   max-width: min(360px, calc(100vw - 32px));
+  /* Toasts only inform: clicks pass through to the buttons underneath (Approve, Reject). */
+  pointer-events: none;
 }
 .toast {
   background: var(--ink);
-  color: var(--bg);
+  color: var(--page);
   padding: 10px 14px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   box-shadow: var(--shadow);
-  font-size: var(--step--1);
+  font-size: 13px;
 }
 
-/* view transition on route change */
+/* view transition on route change: movement only, so screenshots never catch a faded view */
 .view-enter {
   animation: view-enter 260ms ease-out;
 }
-/* Movement only, no fade: the view is fully visible from the first frame (thumbnails,
-   link previews and screenshots may capture it mid-animation). */
+/* A fade, not a slide: a transform on #view would turn it into the containing block of its
+   fixed children (the phone's "Plan waiting" bar and plan sheet) and move them off the screen. */
 @keyframes view-enter {
   from {
-    transform: translateY(6px);
+    opacity: 0.4;
   }
   to {
-    transform: none;
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {

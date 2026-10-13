@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test test/*.test.js",
-    "serve": "node tools/serve.mjs 8090",
+    "serve": "node tools/serve.mjs 8092",
     "artifact": "node tools/make-artifact.mjs"
   }
 }
